@@ -1,0 +1,22 @@
+components:
+gate
+bus
+auths
+users
+logics
+configs
+
+monitor
+----
+db mq cache 
+----
+duty and ability
+gate: for keep the session and hold 1.login info,2.user info
+bus: event dispatcher
+auths:to authenticate the role from connection
+users:user manager for store user's info
+logics:logic manager for manage all room
+---
+master	service... 	action from master to service
+gate	bus		write message read(listen) the message	
+gate	auths			

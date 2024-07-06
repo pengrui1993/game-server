@@ -1,0 +1,3 @@
+cache use redis
+db use mysql
+event bus use rabbit mq
