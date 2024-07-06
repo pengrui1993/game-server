@@ -9,4 +9,8 @@ if [[ !(0 -eq $?) ]]; then
 fi
 if [[ $T_PID ]]; then
   kill -9 $T_PID
+  sleep 
 fi
+
+#start
+#java -jar app.jar

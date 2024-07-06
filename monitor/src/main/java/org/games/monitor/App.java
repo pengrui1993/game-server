@@ -1,9 +1,11 @@
 package org.games.monitor;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.ApplicationPidFileWriter;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.stereotype.Component;
 
 import java.io.PrintStream;
 import java.util.Scanner;
@@ -23,6 +25,14 @@ public class App
     }
     static SpringApplication APP;
     static ConfigurableApplicationContext CTX;
+    @Component
+    public static class Config{
+        @Value("${aaa.test:0}")
+        public int aaa;
+        @Value("${bbb.test:true}")
+        public boolean bbb;
+    }
+
     static PrintStream out(){
         return System.out;
     }
@@ -44,6 +54,10 @@ public class App
                     for (String name : ctx.getBeanDefinitionNames()) {
                         out().println(name+" ");
                     }
+                }
+                case "config":{
+                    Config a = CTX.getBean(Config.class);
+                    out().println(a.aaa+","+a.bbb);
                 }
                 default:
                     out().println(line);

@@ -8,7 +8,8 @@ https://www.cnblogs.com/three-fighter/p/13996864.html
 # mkdir build && unzip ./lib/maven3.zip && mv maven3 ./build
 
 # root package
-/usr/lib/jvm/java-21-openjdk-amd64/bin/java \
+# JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64/
+java \
 -Dmaven.multiModuleProjectDirectory=. \
 -Djansi.passthrough=true \
 -Dmaven.home=./build/maven3 \
