@@ -1,5 +1,5 @@
 package org.games.constant;
 
 public enum CommandType {
-    PING
+    NULL,PING
 }

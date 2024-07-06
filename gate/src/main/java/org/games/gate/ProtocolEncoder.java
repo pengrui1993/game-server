@@ -8,8 +8,8 @@ import org.games.message.Message;
 import java.math.BigInteger;
 
 public class ProtocolEncoder extends MessageToByteEncoder<Message> {
-    private final ContextForCodec ctx;
-    public ProtocolEncoder(ContextForCodec cc) {
+    private final CodecContext ctx;
+    public ProtocolEncoder(CodecContext cc) {
         ctx=cc;
     }
     @Override

@@ -9,8 +9,8 @@ import java.math.BigInteger;
 import java.util.List;
 
 public class ProtocolDecoder extends ByteToMessageDecoder {
-    private final ContextForCodec ctx;
-    public ProtocolDecoder(ContextForCodec cc) {
+    private final CodecContext ctx;
+    public ProtocolDecoder(CodecContext cc) {
         ctx=cc;
     }
 

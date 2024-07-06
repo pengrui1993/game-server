@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Handler extends IoHandlerAdapter {
-    static final Logger logger = LoggerFactory.getLogger(Handler.class);
+    static final Logger log = LoggerFactory.getLogger(Handler.class);
     @Override
     public void messageReceived(IoSession session, Object message) throws Exception {
         if (session == null || message == null) {
@@ -20,11 +20,11 @@ public class Handler extends IoHandlerAdapter {
                 //将消息交给后面的事件循环线程处理
 //                msgLoop.msgReceived(msg, session);
             } else {
-                logger.error("decode msg error.");
+                log.error("decode msg error.");
                 //session.close(true);
             }
         } catch (Exception e) {
-            logger.error("receive message error: ", e);
+            log.error("receive message error: ", e);
             //session.close(true);
         }
     }

@@ -22,7 +22,7 @@ public class Server {
     @Resource
     private ServerHandler handler;
     @Resource
-    private ContextForCodec cc;
+    private CodecContext cc;
     @Value("${config.server.port:2999}")
     private int port;
     private Channel serverSide;

@@ -1,0 +1,7 @@
+package org.games.gate.evt;
+
+public enum GateEventType {
+   NULL,PRE_PONG,POST_PONG, CONNECTION_ERR,SESSION_NEW
+   ,CONNECTED,DISCONNECTED
+   ,USER_RECONNECTED,USER_LOGIN_DONE
+}

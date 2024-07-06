@@ -1,6 +1,8 @@
 package org.games.cmd;
 
-public interface CommandHandler {
+import org.games.constant.CommandType;
 
-    void handle(Command cmd);
+public interface CommandHandler {
+    default CommandType type(){return CommandType.NULL;}
+    void handle(CommandContext ctx);
 }
