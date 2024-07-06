@@ -1,3 +1,25 @@
 cache use redis
 db use mysql
 event bus use rabbit mq
+
+#skip test
+https://www.cnblogs.com/three-fighter/p/13996864.html
+
+# mkdir build && unzip ./lib/maven3.zip && mv maven3 ./build
+
+# root package
+/usr/lib/jvm/java-21-openjdk-amd64/bin/java \
+-Dmaven.multiModuleProjectDirectory=. \
+-Djansi.passthrough=true \
+-Dmaven.home=./build/maven3 \
+-Dclassworlds.conf=./lib/m2.conf \
+-Dmaven.test.skip=true \
+-Dfile.encoding=UTF-8 \
+-Dsun.stdout.encoding=UTF-8 \
+-Dsun.stderr.encoding=UTF-8 \
+-classpath ./lib/plexus-classworlds.license:./lib/plexus-classworlds-2.6.0.jar \
+org.codehaus.classworlds.Launcher \
+-Didea.version=2023.1.1 \
+package
+
+
