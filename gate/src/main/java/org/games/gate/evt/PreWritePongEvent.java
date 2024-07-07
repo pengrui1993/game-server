@@ -1,12 +1,9 @@
 package org.games.gate.evt;
 
-import org.games.cmd.Command;
-import org.games.gate.Session;
-import org.games.message.PongMessage;
-
 public class PreWritePongEvent implements GateEvent {
-
-    public PreWritePongEvent(Session session, Command command, PongMessage msg) {
+    public final TriggerPingEvent tpe;
+    public PreWritePongEvent(TriggerPingEvent e) {
+        this.tpe = e;
     }
 
     @Override

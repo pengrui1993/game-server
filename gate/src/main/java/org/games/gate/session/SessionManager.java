@@ -1,8 +1,10 @@
-package org.games.gate;
+package org.games.gate.session;
 
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import jakarta.annotation.Resource;
+import org.games.gate.codec.ProtocolEncoder;
+import org.games.gate.net.ServerHandler;
 import org.games.gate.evt.*;
 import org.games.message.Message;
 import org.slf4j.Logger;
@@ -19,8 +21,6 @@ public class SessionManager implements ServerHandler.Accessor{
     private final Map<Object,SessionImpl> allSessions = new HashMap<>();
     private final Map<String,SessionImpl> userToSession = new HashMap<>();
     class SessionImpl implements Session{
-
-
         enum State{
             CONNED,LOGIN_DONE,DISCONNECTED
         }

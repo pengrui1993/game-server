@@ -1,6 +1,6 @@
 package org.games.gate.evt;
 
-import org.games.gate.Session;
+import org.games.gate.session.Session;
 
 public class SessionNewEvent implements GateEvent{
 

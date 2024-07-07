@@ -14,3 +14,11 @@ fi
 
 #start
 #java -jar app.jar
+#nohup java -Xms2G -Xmx2G -server -verbose:gc -Xlog:gc*:.\gc.log -jar target\server-0.1.jar
+echo 'no start,please change the shell'
+exit 0;
+java \
+-Xms2G -Xmx2G -server -verbose:gc -Xlog:gc \
+-verbose:class|module|gc|jni \
+-jar target\server-0.1.jar \
+2>&1 1>./server.log &

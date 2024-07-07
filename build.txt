@@ -6,9 +6,8 @@ event bus use rabbit mq
 https://www.cnblogs.com/three-fighter/p/13996864.html
 
 # mkdir build && unzip ./lib/maven3.zip && mv maven3 ./build
-
-# root package
 # JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64/
+# mvn clean
 java \
 -Dmaven.multiModuleProjectDirectory=. \
 -Djansi.passthrough=true \
@@ -20,7 +19,32 @@ java \
 -Dsun.stderr.encoding=UTF-8 \
 -classpath ./lib/plexus-classworlds.license:./lib/plexus-classworlds-2.6.0.jar \
 org.codehaus.classworlds.Launcher \
--Didea.version=2023.1.1 \
+clean
+
+# root package
+java \
+-Dmaven.multiModuleProjectDirectory=. \
+-Djansi.passthrough=true \
+-Dmaven.home=./build/maven3 \
+-Dclassworlds.conf=./lib/m2.conf \
+-Dmaven.test.skip=true \
+-Dfile.encoding=UTF-8 \
+-Dsun.stdout.encoding=UTF-8 \
+-Dsun.stderr.encoding=UTF-8 \
+-classpath ./lib/plexus-classworlds.license:./lib/plexus-classworlds-2.6.0.jar \
+org.codehaus.classworlds.Launcher \
 package
 
 
+
+
+#idea's clean
+/usr/lib/jvm/java-21-openjdk-amd64/bin/java -Dmaven.multiModuleProjectDirectory=/home/pengrui/IdeaProjects/game_server -Djansi.passthrough=true -Dmaven.home=/home/pengrui/.local/share/JetBrains/Toolbox/apps/IDEA-C/ch-0/241.18034.62/plugins/maven/lib/maven3 -Dclassworlds.conf=/home/pengrui/.local/share/JetBrains/Toolbox/apps/IDEA-C/ch-0/241.18034.62/plugins/maven/lib/maven3/bin/m2.conf -Dmaven.ext.class.path=/home/pengrui/.local/share/JetBrains/Toolbox/apps/IDEA-C/ch-0/241.18034.62/plugins/maven/lib/maven-event-listener.jar -javaagent:/home/pengrui/.local/share/JetBrains/Toolbox/apps/IDEA-C/ch-0/241.18034.62/lib/idea_rt.jar=46043:/home/pengrui/.local/share/JetBrains/Toolbox/apps/IDEA-C/ch-0/241.18034.62/bin -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -classpath /home/pengrui/.local/share/JetBrains/Toolbox/apps/IDEA-C/ch-0/241.18034.62/plugins/maven/lib/maven3/boot/plexus-classworlds.license:/home/pengrui/.local/share/JetBrains/Toolbox/apps/IDEA-C/ch-0/241.18034.62/plugins/maven/lib/maven3/boot/plexus-classworlds-2.7.0.jar org.codehaus.classworlds.Launcher -Didea.version=2024.1.4 clean
+#idea's package
+/usr/lib/jvm/java-21-openjdk-amd64/bin/java -Dmaven.multiModuleProjectDirectory=/home/pengrui/IdeaProjects/game_server -Djansi.passthrough=true -Dmaven.home=/home/pengrui/.local/share/JetBrains/Toolbox/apps/IDEA-C/ch-0/241.18034.62/plugins/maven/lib/maven3 -Dclassworlds.conf=/home/pengrui/.local/share/JetBrains/Toolbox/apps/IDEA-C/ch-0/241.18034.62/plugins/maven/lib/maven3/bin/m2.conf -Dmaven.ext.class.path=/home/pengrui/.local/share/JetBrains/Toolbox/apps/IDEA-C/ch-0/241.18034.62/plugins/maven/lib/maven-event-listener.jar -javaagent:/home/pengrui/.local/share/JetBrains/Toolbox/apps/IDEA-C/ch-0/241.18034.62/lib/idea_rt.jar=42053:/home/pengrui/.local/share/JetBrains/Toolbox/apps/IDEA-C/ch-0/241.18034.62/bin -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -classpath /home/pengrui/.local/share/JetBrains/Toolbox/apps/IDEA-C/ch-0/241.18034.62/plugins/maven/lib/maven3/boot/plexus-classworlds.license:/home/pengrui/.local/share/JetBrains/Toolbox/apps/IDEA-C/ch-0/241.18034.62/plugins/maven/lib/maven3/boot/plexus-classworlds-2.7.0.jar org.codehaus.classworlds.Launcher -Didea.version=2024.1.4 package
+
+
+-javaagent:
+/home/pengrui/.local/share/JetBrains/Toolbox/apps/IDEA-C/ch-0/241.18034.62/lib/idea_rt.jar=
+46043:
+/home/pengrui/.local/share/JetBrains/Toolbox/apps/IDEA-C/ch-0/241.18034.62/bin

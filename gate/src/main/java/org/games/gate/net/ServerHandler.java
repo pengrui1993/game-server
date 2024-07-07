@@ -1,15 +1,16 @@
-package org.games.gate;
+package org.games.gate.net;
 
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import jakarta.annotation.Resource;
 import org.games.cmd.Command;
-import org.games.gate.cmd.CommandContextFactory;
-import org.games.gate.cmd.CommandHandlerFinder;
+import org.games.gate.cmd.ContextFactory;
+import org.games.gate.cmd.HandlerFinder;
 import org.games.gate.evt.ConnectedEvent;
 import org.games.gate.evt.GateEventEmitter;
 import org.games.gate.evt.ConnectionErrorEvent;
+import org.games.gate.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -31,9 +32,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<Command> {
     @Resource
     private Accessor sessions;
     @Resource
-    private CommandContextFactory ccf;
+    private ContextFactory ccf;
     @Resource
-    private CommandHandlerFinder chf;
+    private HandlerFinder chf;
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Command command) throws Exception {
         Session session;
@@ -45,7 +46,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<Command> {
                 System.exit(-1);
             }
         }
-        chf.find(command.type()).handle(ccf.factory(command,session,emitter));
+        chf.find(command.type())
+                .handle(ccf.factory(command,session,emitter));
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {

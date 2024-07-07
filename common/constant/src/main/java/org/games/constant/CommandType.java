@@ -1,5 +1,10 @@
 package org.games.constant;
 
 public enum CommandType {
-    NULL,PING
+    NULL(0),PING(1);
+    public final int code;
+
+    CommandType(int code) {
+        this.code = code;
+    }
 }

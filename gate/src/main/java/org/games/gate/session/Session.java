@@ -1,4 +1,4 @@
-package org.games.gate;
+package org.games.gate.session;
 
 import org.games.message.Message;
 

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 
 @Component
-public class GateEventDispatcher implements GateEventRegister{
+public class GateEventDispatcher implements GateEventRegister,GateEventEmitter{
     private final Map<GateEventType, List<GateEventListener>> channels = new HashMap<>();
     public void on(GateEventType type,GateEventListener listener){
         List<GateEventListener> ls = channels.get(type);
