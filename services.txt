@@ -1,0 +1,11 @@
+0:start mysql redis rabbitmq
+
+1:start gate
+2:start config
+3:start bus
+4:start users
+5:start auth
+6:start logics
+
+10:start monitor
+

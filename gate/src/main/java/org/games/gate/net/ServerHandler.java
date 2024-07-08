@@ -31,10 +31,6 @@ public class ServerHandler extends SimpleChannelInboundHandler<Command> {
     }
     @Resource
     private Accessor sessions;
-    @Resource
-    private ContextFactory ccf;
-    @Resource
-    private HandlerFinder chf;
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Command command) throws Exception {
         Session session;
@@ -46,8 +42,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Command> {
                 System.exit(-1);
             }
         }
-        chf.find(command.type())
-                .handle(ccf.factory(command,session,emitter));
+        session.onCommand(command);
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {

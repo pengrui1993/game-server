@@ -25,6 +25,11 @@
     <module>common/constant</module>
     <module>common/message</module>
     <module>monitor</module>
+      <module>common/logic-sc-xlch</module>
+    <module>common/logic-sc-xzdd</module>
+    <module>common/logic-ddz</module>
+    <module>common/model-mahjong-tile</module>
+    <module>common/model-poker-card</module>
   </modules>
 
     <properties>
@@ -35,12 +40,12 @@
 
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>3.8.1</version>
-        <scope>test</scope>
-      </dependency>
+<!--      <dependency>-->
+<!--        <groupId>junit</groupId>-->
+<!--        <artifactId>junit</artifactId>-->
+<!--        <version>3.8.1</version>-->
+<!--        <scope>test</scope>-->
+<!--      </dependency>-->
       <!-- https://mvnrepository.com/artifact/io.netty/netty-all -->
       <dependency>
         <groupId>io.netty</groupId>
@@ -64,6 +69,19 @@
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
         <version>2.17.2</version>
+      </dependency>
+      <!-- https://mvnrepository.com/artifact/com.h2database/h2 -->
+      <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <version>2.2.224</version>
+        <scope>test</scope>
+      </dependency>
+      <!-- https://mvnrepository.com/artifact/com.rabbitmq/amqp-client -->
+      <dependency>
+        <groupId>com.rabbitmq</groupId>
+        <artifactId>amqp-client</artifactId>
+        <version>5.21.0</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

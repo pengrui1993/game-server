@@ -1,4 +1,4 @@
-package org.games.monitor;
+package test;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -13,6 +13,7 @@ import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
+import org.springframework.stereotype.Component;
 /*
 https://mina.apache.org/mina-project/userguide/ch2-basics/ch2.1.1-server-architecture.html
  */

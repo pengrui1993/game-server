@@ -1,0 +1,34 @@
+"Astronomical information for a single planet."
+type Planet {
+  "The ID for the planet"
+  id: ID!
+  "The planet's name"
+  name: String!
+  "The total estimated mass of the planet (in kg)"
+  mass: Int
+  "The galaxy the planet is located in"
+  galaxy: Galaxy
+}
+
+type Galaxy {
+  id: ID!
+  name: String!
+  yearDiscovered: Int
+}
+
+type Query {
+  bookById(id: ID): Book
+}
+
+type Book {
+  id: ID
+  name: String
+  pageCount: Int
+  author: Author
+}
+
+type Author {
+  id: ID
+  firstName: String
+  lastName: String
+}

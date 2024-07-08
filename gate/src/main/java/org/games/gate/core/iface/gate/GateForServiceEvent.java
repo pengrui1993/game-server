@@ -1,14 +1,12 @@
-package org.games.gate;
+package org.games.gate.core.iface.gate;
 
-public interface Gateway {
+public interface GateForServiceEvent {
 
+    void onDisconnected();
+    void onReconnected();
     void onCommanded();
     void onConnected();
     void onAuth();
-    void onDisconnected();
-    void onReconnected();
-
-
     void onMessaged();
     void onJoinRoom();
     void onExitRoom();

@@ -1,10 +1,10 @@
 components:
 gate
 bus
-auths
+auth
 users
 logics
-configs
+config
 
 monitor
 ----
@@ -20,3 +20,21 @@ logics:logic manager for manage all room
 master	service... 	action from master to service
 gate	bus		write message read(listen) the message	
 gate	auths			
+
+
+------
+gate is plugin architecture
+config dep:mq db
+bus dep:mq db
+users dep:mq db config
+auth dep:mq db users config
+logics dep:mq db auth users config
+
+monitor dep:mq db
+
+
+
+------
+db mysql
+cache redis
+mq rabbitmq

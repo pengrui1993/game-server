@@ -1,4 +1,4 @@
-package org.games;
+package test;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.service.IoHandlerAdapter;
@@ -6,8 +6,8 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Handler extends IoHandlerAdapter {
-    static final Logger log = LoggerFactory.getLogger(Handler.class);
+public class MinaIoHandler extends IoHandlerAdapter {
+    static final Logger log = LoggerFactory.getLogger(MinaIoHandler.class);
     @Override
     public void messageReceived(IoSession session, Object message) throws Exception {
         if (session == null || message == null) {

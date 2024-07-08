@@ -1,4 +1,4 @@
-package org.games;
+package org.example;
 
 import junit.framework.Test;
 import junit.framework.TestCase;

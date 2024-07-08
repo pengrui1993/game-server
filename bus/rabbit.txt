@@ -1,0 +1,21 @@
+#macos
+    #if first
+        brew update
+        brew install rabbitmq
+        brew info rabbitmq
+    #end if
+
+    #if front running
+        export CONF_ENV_FILE="/opt/homebrew/etc/rabbitmq/rabbitmq-env.conf" && /opt/homebrew/opt/rabbitmq/sbin/rabbitmq-server
+        /opt/homebrew/sbin/rabbitmqctl enable_feature_flag all
+    #else if backend running
+        brew services start rabbitmq
+        /opt/homebrew/sbin/rabbitmqctl enable_feature_flag all
+    #endif
+#end macos
+
+#web monitor
+https://www.rabbitmq.com/docs/management
+http://localhost:15672/
+username:guest  password:guest
+#end web monitor
