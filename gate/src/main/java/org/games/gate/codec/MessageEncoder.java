@@ -3,24 +3,27 @@ package org.games.gate.codec;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
-import org.games.gate.session.Session;
+import org.games.constant.Const;
+import org.games.gate.ProgramContext;
 import org.games.message.Message;
-import org.games.message.MessageEncoder;
 
 import java.math.BigInteger;
 
-public class ProtocolEncoder extends MessageToByteEncoder<Message> {
-    private final CodecContext ctx;
-    public ProtocolEncoder(CodecContext cc) {
-        ctx=cc;
+public class MessageEncoder extends MessageToByteEncoder<Message> {
+    private final ProgramContext cc;
+    public MessageEncoder(ProgramContext cc) {
+        this.cc=cc;
     }
+    int CLIENT_MAGIC = Const.CLIENT_MAGIC;
     @Override
     protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) throws Exception {
-        final MessageEncoder e = this.ctx.getEncoder(msg.type());
-        byte[] encode = e.encode(msg);
-        if(encode.length==0)return;
-        MessageHandlerInfo info = new MessageHandlerInfo();
-        //TODO
+        byte[] msgBody = EncoderHandler.getEncoder(msg.type()).encode(msg);
+        if(msgBody.length==0)return;
+        out.writeInt(CLIENT_MAGIC);
+        byte[] header = new byte[10];
+        //TODO add header info to write
+        out.writeBytes(header);
+        out.writeBytes(msgBody);
     }
 
     protected void demo(ChannelHandlerContext ctx, Message msg, ByteBuf out) throws Exception {

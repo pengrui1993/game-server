@@ -2,7 +2,8 @@ package org.games.model.mahjong;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /*
  筒子 条子 万字 中发白 东南西北

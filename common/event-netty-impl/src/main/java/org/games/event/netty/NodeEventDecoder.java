@@ -12,12 +12,6 @@ import java.util.List;
 public class NodeEventDecoder extends ByteToMessageDecoder {
     static final int MAGIC = Const.CLIENT_MAGIC;
     static final int NODE = Const.NODE_MAGIC;
-    private final EventDecodedTrigger trigger;
-
-    public NodeEventDecoder(EventDecodedTrigger trigger) {
-        this.trigger = trigger;
-    }
-
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         final int headerSize = 20;
@@ -47,9 +41,9 @@ public class NodeEventDecoder extends ByteToMessageDecoder {
         in.readBytes(buf);
         System.out.printf("magic:%s,version:%s,eventId:%s\n",header.magic,header.version,header.eventId);
         System.out.println(new String(buf));
-        NodeEventDecoderHandler handler = new NodeConnectedEventDecoderHandler();
+        NodeEventDecoderHandler handler = DecoderFinder.find(header.eventId);
         Event evt = handler.decode(header, buf);
-        trigger.triggerEvent(ctx.channel(),evt);
+        out.add(evt);
     }
 
     private void demo(ChannelHandlerContext ctx, ByteBuf in, List<Object> out){

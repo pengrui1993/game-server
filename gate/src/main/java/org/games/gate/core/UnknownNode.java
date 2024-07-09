@@ -15,4 +15,10 @@ class UnknownNode implements Node {
     public Type type() {
         return Type.NONE;
     }
+
+    @Override
+    public Session getSession() {
+        return session;
+    }
+
 }

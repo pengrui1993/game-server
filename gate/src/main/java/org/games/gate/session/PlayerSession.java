@@ -2,10 +2,7 @@ package org.games.gate.session;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
-import org.games.cmd.Command;
-import org.games.gate.cmd.ContextFactory;
-import org.games.gate.cmd.HandlerFinder;
-import org.games.gate.evt.GateEventEmitter;
+import org.games.gate.ProgramContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,17 +10,12 @@ import java.util.Objects;
 
 class PlayerSession implements Session{
     static final Logger log = LoggerFactory.getLogger(PlayerSession.class);
-    private final ApiForSession manager;
-    private GateEventEmitter emitter;
-    PlayerSession(Object fd, ApiForSession sessionManager){
-        this.fd = (Channel)fd;
-        this.manager = sessionManager;
-        final ContextFactory ccf = sessionManager.getCommandContextFactory();
-        final HandlerFinder chf = sessionManager.getCommandHandlerFinder();
-        target = command -> chf.find(command.type()).handle(ccf.factory(command,this,emitter));
-        manager.register(fd,this);
+    ProgramContext pc;
+    public PlayerSession(Object ctx, ProgramContext pc) {
+        this.fd = Channel.class.cast(ctx);
+        this.pc = pc;
+        this.pc.get(SessionManager.class).register(fd,this);
     }
-    Handler target;
     Channel fd;
     static final int NO_ROOM = 0;
     int roomId = NO_ROOM;
@@ -35,12 +27,10 @@ class PlayerSession implements Session{
     static int nextGlobalMsgId = 0;
     boolean isLoginDone(){ return !Objects.equals(userId, NO_LOGIN);}
     boolean isPlayingInGame(){ return roomId!=NO_ROOM;}
-
     @Override
     public SessionType type() {
         return SessionType.USER;
     }
-
     void login(String userId) {
         if(!Objects.equals(NO_LOGIN, this.userId)){
             log.error("already login");
@@ -55,10 +45,7 @@ class PlayerSession implements Session{
         else fd.writeAndFlush(data)
                 .addListener((ChannelFutureListener) cf -> r.run());
     }
-    @Override
-    public void onCommand(Command command) {
-        target.handle(command);
-    }
+
     @Override
     public Object getFd() {
         return fd;

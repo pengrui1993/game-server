@@ -2,16 +2,14 @@ package org.games.gate.session;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import org.games.message.Message;
+import org.games.gate.ProgramContext;
 
 public class NoRoleSession implements Session{
-    ApiForSession manager;
+    ProgramContext pc;
     Channel fd;
-    public NoRoleSession(Object ctx, ApiForSession sessionManager) {
+    public NoRoleSession(Object ctx, ProgramContext pc) {
         this.fd = Channel.class.cast(ctx);
-        this.manager = sessionManager;
-        manager.register(fd,this);
+        this.pc = pc;
     }
     @Override
     public void writeAndFlush(Object buf, Runnable r) {

@@ -14,9 +14,10 @@ public class BusNode implements Node
     public Type type() {
         return Type.BUS;
     }
-    Session busNodeSession;
     @Override
-    public boolean isNodeSession(Session session) {
-        return false;
+    public Session getSession() {
+        return busNodeSession;
     }
+    Session busNodeSession;
+
 }

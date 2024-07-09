@@ -35,6 +35,10 @@ public class GateNode implements Node.GateHandler
             return real.type();
         }
         @Override
+        public Session getSession() {
+            return real.getSession();
+        }
+        @Override
         public boolean equals(Object obj) {
             if(null==obj)return false;
             if(obj instanceof Node n){

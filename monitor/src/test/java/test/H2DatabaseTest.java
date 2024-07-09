@@ -1,9 +1,10 @@
 package test;
-import java.sql.*;
 
 import org.h2.server.web.DbStarter;
 import org.h2.server.web.JakartaDbStarter;
 import org.h2.tools.Server;
+
+import java.sql.*;
 public class H2DatabaseTest {
 
     void test(){

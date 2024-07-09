@@ -36,4 +36,8 @@ public class GateEventDispatcher implements GateEventRegister,GateEventEmitter{
             l.onEvent(evt);
         }
     }
+    @Override
+    public String toString() {
+        return super.toString()+":\n"+channels;
+    }
 }

@@ -1,19 +1,18 @@
 package test;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
-import java.util.Date;
-
 import org.apache.mina.core.service.IoAcceptor;
+import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 import org.apache.mina.filter.logging.LoggingFilter;
-import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
-import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
+import java.util.Date;
 /*
 https://mina.apache.org/mina-project/userguide/ch2-basics/ch2.1.1-server-architecture.html
  */

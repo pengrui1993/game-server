@@ -4,13 +4,10 @@ import io.netty.buffer.Unpooled;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.annotation.Resource;
-import org.games.gate.App;
-import org.games.gate.cmd.ContextFactory;
-import org.games.gate.cmd.HandlerFinder;
+import org.games.gate.ProgramContext;
 import org.games.gate.core.AuthNode;
-import org.games.gate.net.Server;
-import org.games.gate.net.ServerHandler;
 import org.games.gate.evt.*;
+import org.games.gate.net.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -22,27 +19,14 @@ import java.util.Objects;
 
 @Component
 public class SessionManager
-        implements ServerHandler.Accessor
-                    ,Session.ApiForSession
-                    , AuthNode.SessionAccessor
+        implements  AuthNode.SessionAccessor
                     , Server.SessionAccessor
 {
     static final Logger log = LoggerFactory.getLogger(SessionManager.class);
     private final Map<Object,Session> allSessions = new HashMap<>();
     private final Map<String,Session> userToSession = new HashMap<>();
     @Resource
-    private ContextFactory ccf;
-    @Resource
-    private HandlerFinder chf;
-    @Override
-    public ContextFactory getCommandContextFactory() {
-        return ccf;
-    }
-    @Override
-    public HandlerFinder getCommandHandlerFinder() {
-        return chf;
-    }
-    @Override
+    private ProgramContext pc;
     public void register(Object fd, Session session) {
         allSessions.put(fd,session);
     }
@@ -52,11 +36,10 @@ public class SessionManager
     private final GateEventListener onConnected=(GateEvent ev)->{
         final ConnectedEvent e = ConnectedEvent.class.cast(ev);
         final GateEventEmitter emitter = this.emitter;
-        Session session;
-        emitter.emit(new SessionNewEvent(session=new NoRoleSession(e.ctx,this)));
-        App.exec(()-> {
-            session.writeAndFlush("hello netty".getBytes(StandardCharsets.UTF_8));
-        });
+        Session session=new NoRoleSession(e.ctx,pc);
+        register(e.ctx,session);
+        emitter.emit(new SessionNewEvent(session));
+        session.writeAndFlush("hello netty".getBytes(StandardCharsets.UTF_8));
     };
     private final GateEventListener onDisconnected = (GateEvent ev)->{
         DisconnectedEvent e = DisconnectedEvent.class.cast(ev);

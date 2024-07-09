@@ -1,6 +1,7 @@
 package org.games.gate;
 
 import org.games.event.Sync;
+import org.games.gate.evt.GateEventRegister;
 import org.games.gate.net.Server;
 import org.games.gate.session.SessionManager;
 import org.springframework.boot.SpringApplication;
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Scanner;
 
@@ -18,14 +20,14 @@ import java.util.Scanner;
  * Hello world!
  *
  */
-@SpringBootApplication()//app:org.games.gate.App$$SpringCGLIB$$0@54f66455
-//@SpringBootApplication(proxyBeanMethods = false)//app:org.games.gate.App@749f539e
-public class App
+//@SpringBootApplication()//app:org.games.gate.App$$SpringCGLIB$$0@54f66455
+@SpringBootApplication(proxyBeanMethods = false)//app:org.games.gate.App@749f539e
+public class App implements ProgramContext
 {
-    public static SpringApplication getApp(){
+    public static SpringApplication app(){
         return APP;
     }
-    public static ConfigurableApplicationContext getContext(){
+    public static ConfigurableApplicationContext ctx(){
         return CTX;
     }
     static SpringApplication APP;
@@ -33,11 +35,11 @@ public class App
     static PrintStream out(){
         return System.out;
     }
-    public static void main( String[] args )
-    {
+    public static void main( String[] args ) {
         SpringApplication app = APP=new SpringApplication(App.class);
         app.addListeners(new ApplicationPidFileWriter());
         ConfigurableApplicationContext ctx = CTX=app.run(args);
+        sync.start();
 //        System.out.println(ctx.getBean(Gson.class));//yes
         Scanner scanner = new Scanner(System.in);
         String line;
@@ -72,7 +74,11 @@ public class App
             }
         }
         ctx.getBean(Server.class).shutdown();
+        GateEventRegister bean = ctx.getBean(GateEventRegister.class);
         ctx.close();
+        System.out.println(bean);
+        sync.sync();
+
     }
 
     /*
@@ -93,29 +99,29 @@ org.springframework.boot.autoconfigure.ssl.SslAutoConfiguration
 org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration
 org.springframework.boot.autoconfigure.task.TaskSchedulingAutoConfiguration
      */
-    static Sync sync;
-    @Bean
-    public Sync sync(){
-        return sync=new Sync();
-    }
-    public static void exec(Runnable r){
+    static Sync sync = new Sync();
+    @Override
+    public void exec(Runnable r){
         if(Objects.isNull(r))
             return;
-        if(Objects.nonNull(sync)) {
-            if(sync.inWorkerThread(Thread.currentThread())){
-                r.run();
-            }else{
-                sync.exec(r);
-            }
-        }else{
+        if(sync.inWorkerThread(Thread.currentThread())){
             r.run();
+        }else{
+            sync.exec(r);
         }
     }
-    public static void post(Runnable r){
+    @Override
+    public void post(Runnable r){
         if(Objects.isNull(r))
             return;
-        if(Objects.isNull(sync))
-            throw new IllegalStateException("missing sync");
         sync.exec(r);
+    }
+    @Override
+    public <T> T get(Class<T> clazz) {
+        return ctx().getBean(clazz);
+    }
+    @Override
+    public <T> Collection<T> gets(Class<T> clazz) {
+        return ctx().getBeansOfType(clazz).values();
     }
 }

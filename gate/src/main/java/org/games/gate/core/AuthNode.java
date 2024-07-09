@@ -1,16 +1,14 @@
 package org.games.gate.core;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.annotation.Resource;
-import org.games.gate.core.iface.Auth;
-import org.springframework.stereotype.Component;
-
 import org.games.constant.Const;
 import org.games.event.Event;
 import org.games.event.NodeConnectGateEvent;
 import org.games.event.NodeDisconnectGateEvent;
-import org.games.gate.App;
-import org.games.gate.core.iface.Node;
+import org.games.gate.ProgramContext;
+import org.games.gate.core.iface.Auth;
 import org.games.gate.evt.GateEventListener;
 import org.games.gate.evt.GateEventRegister;
 import org.games.gate.evt.GateEventType;
@@ -18,6 +16,7 @@ import org.games.gate.evt.GlobalEventTriggeredEvent;
 import org.games.gate.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -25,27 +24,31 @@ import java.util.Objects;
 @Component
 public class AuthNode implements Auth {
     static final Logger log = LoggerFactory.getLogger(AuthNode.class);
+    @Override
+    public Session getSession() {
+        return authNodeSession;
+    }
 
     public interface SessionAccessor{
         Session get(Object ctx);
     }
     @Resource
-    private SessionAccessor accessor;
+    private ProgramContext pc;
     @PostConstruct
     private void init(){
-        register.on(GateEventType.GLOBAL_EVENT_TRIGGERED,onGlobalEventTriggered);
+        pc.postGet(GateEventRegister.class,register->{
+            register.on(GateEventType.GLOBAL_EVENT_TRIGGERED,onGlobalEventTriggered);
+        });
+        //GateEventType.GLOBAL_EVENT_TRIGGERED
     }
-    @Resource
-    private GateEventRegister register;//GateEventType.GLOBAL_EVENT_TRIGGERED
+    @PreDestroy
+    private void destroy(){
+        pc.get(GateEventRegister.class).off(GateEventType.GLOBAL_EVENT_TRIGGERED,onGlobalEventTriggered);
+    }
     Session authNodeSession;
     void onUpdate(){
         Session s = authNodeSession;
     }
-    @Override
-    public boolean isNodeSession(Session session) {
-        return isAuthSession(session);
-    }
-    @Override
     public boolean isAuthSession(Session session){
         if(Objects.isNull(session))return false;
         return this.authNodeSession == session;
@@ -58,7 +61,7 @@ public class AuthNode implements Auth {
                 NodeConnectGateEvent ge = NodeConnectGateEvent.class.cast(evt);
                 if (ge.nodeType == Const.AUTH_TYPE_ID) {
                     System.out.println("connected");
-                    Session session = accessor.get(ev.fd);
+                    Session session = pc.get(SessionAccessor.class).get(ev.fd);
                     authNodeSession = session;
                     session.writeAndFlush("connected".getBytes(StandardCharsets.UTF_8)
                             , () -> System.out.println("ack done"));
@@ -70,8 +73,8 @@ public class AuthNode implements Auth {
                     System.out.println("disconnected");
                     Session session = authNodeSession;
                     authNodeSession = null;
-                    App.post(()->{
-                        if(Objects.nonNull(accessor.get(ev.fd))){
+                    pc.post(()->{
+                        if(Objects.nonNull(pc.get(SessionAccessor.class).get(ev.fd))){
                             log.error("auth disconnected , the session should be deleted,but not");
                             System.exit(-1);
                         }

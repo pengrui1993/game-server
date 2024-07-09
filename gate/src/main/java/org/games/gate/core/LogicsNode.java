@@ -18,6 +18,12 @@ public class LogicsNode implements Logics, Node {
     public Type type() {
         return Type.LOGICS;
     }
+
+    @Override
+    public Session getSession() {
+        return session;
+    }
+
     @Override
     public void queryNewState(QueryCallback cb) {
         QueryContext context = new QueryContext();

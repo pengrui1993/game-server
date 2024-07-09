@@ -5,17 +5,20 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.CorruptedFrameException;
 import org.games.cmd.Command;
+import org.games.cmd.CommandHeader;
+import org.games.constant.CommandType;
+import org.games.constant.Const;
+import org.games.gate.ProgramContext;
 
 import java.math.BigInteger;
 import java.util.List;
 
-public class ProtocolDecoder extends ByteToMessageDecoder {
-    private final CodecContext cCtx;
-    public ProtocolDecoder(CodecContext cc) {
+public class CommandDecoder extends ByteToMessageDecoder {
+    private final ProgramContext cCtx;
+    public CommandDecoder(ProgramContext cc) {
         cCtx =cc;
     }
-    static final int MAGIC = CodecContext.CLIENT_MAGIC;
-    static final int NODE = CodecContext.NODE_MAGIC;
+    static final int MAGIC = Const.CLIENT_MAGIC;
     // hi bits -> low bits : G A M E
     public static void main(String[] args) {
         for (char c : "GAME".toCharArray()) {
@@ -57,8 +60,7 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
         in.readBytes(body);
         final CommandHeaderInfo info =
                 new CommandHeaderInfo(magic,version,command,length,body);
-        final DecoderHandler decoder = cCtx.getDecoder(info);
-        final Command cmd = decoder.decode(info, body);
+        Command cmd = DecoderHandler.getCommandDecoder(info).encode(info, body);
         out.add(cmd);
     }
 
