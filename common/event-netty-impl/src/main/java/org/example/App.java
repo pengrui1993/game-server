@@ -1,4 +1,4 @@
-package org.games;
+package org.example;
 
 /**
  * Hello world!

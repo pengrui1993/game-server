@@ -17,6 +17,9 @@ public class Sync {
     }
     private final Thread creator;
     private final Thread worker;
+    public boolean inWorkerThread(Thread t){
+        return worker == t;
+    }
     private final BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>();
     private void loop(){
         while(true){

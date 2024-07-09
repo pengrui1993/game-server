@@ -1,11 +1,8 @@
 package org.games.constant;
 
-public interface Const {
-    int GATE_TYPE_ID = 0;
-    int BUS_TYPE_ID = 1;
-    int CONFIGS_TYPE_ID = 2;
-    int AUTH_TYPE_ID = 3;
-    int LOGICS_TYPE_ID = 4;
-    int USERS_TYPE_ID = 5;
-    int MONITOR_TYPE_ID = 100;
+public interface Const extends RoleTypeConst,EventConst{
+
+    int CLIENT_MAGIC = ('G'<<(32-(1*8)))|('A'<<(32-(2*8)))|('M'<<(32-(3*8)))|('E'<<(32-(4*8)));
+    int NODE_MAGIC = ('N'<<(32-(1*8)))|('O'<<(32-(2*8)))|('D'<<(32-(3*8)))|('E'<<(32-(4*8)));
+
 }

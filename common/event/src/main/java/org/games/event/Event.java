@@ -1,5 +1,7 @@
 package org.games.event;
 
-public interface Event {
+import org.games.constant.EventType;
 
+public interface Event {
+    EventType type();
 }

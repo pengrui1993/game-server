@@ -14,7 +14,8 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
     public ProtocolDecoder(CodecContext cc) {
         cCtx =cc;
     }
-    static final int MAGIC = CodecContext.MAGIC;
+    static final int MAGIC = CodecContext.CLIENT_MAGIC;
+    static final int NODE = CodecContext.NODE_MAGIC;
     // hi bits -> low bits : G A M E
     public static void main(String[] args) {
         for (char c : "GAME".toCharArray()) {
@@ -24,6 +25,7 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
         System.out.println();
         System.out.println(Integer.toHexString(MAGIC));
     }
+
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         final int headerSize = 128;//TODO
@@ -47,7 +49,6 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
             throw new CorruptedFrameException("Invalid magic number: " + magic);
         }
         //TODO reserved
-
         //reserved done
         in.resetReaderIndex();
         in.skipBytes(headerSize);

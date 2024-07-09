@@ -1,25 +1,20 @@
 package org.games.bus;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DeliverCallback;
 import jakarta.annotation.PostConstruct;
 import org.games.constant.EventType;
-import org.games.constant.ServiceComponentType;
+import org.games.constant.SystemRoleType;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 public class RouterRule {
     class Target {
-        Set<ServiceComponentType> receivers;
+        Set<SystemRoleType> receivers;
     }
     class Context{
         EventType type;
-        ServiceComponentType source;
+        SystemRoleType source;
         Target target;
     }
     /*
@@ -38,12 +33,12 @@ public class RouterRule {
     }
     List<Context> contextList = new ArrayList<>();
     public interface Handler{
-        void send(ServiceComponentType src,ServiceComponentType desc,Object event);
+        void send(SystemRoleType src, SystemRoleType desc, Object event);
     }
-    void dispatcher(ServiceComponentType src, EventType type, Object event,Handler handler){
+    void dispatcher(SystemRoleType src, EventType type, Object event, Handler handler){
         for (Context context : contextList) {
             if(context.source==src&&type==context.type){
-                for (ServiceComponentType receiver : context.target.receivers) {
+                for (SystemRoleType receiver : context.target.receivers) {
                     handler.send(src,receiver,event);//send to mq.target.queue
                 }
             }

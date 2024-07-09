@@ -1,4 +1,4 @@
-package org.games;
+package org.games.logics;
 
 /**
  * Hello world!

@@ -1,9 +1,11 @@
 package org.games.gate.evt;
 
-public class DisconnectedEvent implements GateEvent{
-    public final Object ctx;
+import org.games.gate.session.Session;
 
-    public DisconnectedEvent(Object ctx) {
+public class DisconnectedEvent implements GateEvent{
+    public final Session ctx;
+
+    public DisconnectedEvent(Session ctx) {
         this.ctx = ctx;
     }
 

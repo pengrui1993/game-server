@@ -1,16 +1,15 @@
 package org.games.gate.core;
 
-import org.games.constant.Const;
-import org.games.constant.ServiceComponentType;
+import org.games.constant.SystemRoleType;
 
 public enum NodeType {
-    AUTH(ServiceComponentType.AUTH.id)
-    ,BUS(ServiceComponentType.BUS.id)
-    ,CONFIG(ServiceComponentType.CONFIG.id)
-    ,GATE(ServiceComponentType.GATE.id)
-    ,LOGICS(ServiceComponentType.LOGICS.id)
-    ,USERS(ServiceComponentType.USERS.id)
-    ,MONITOR(ServiceComponentType.MONITOR.id)
+    AUTH(SystemRoleType.AUTH.id)
+    ,BUS(SystemRoleType.BUS.id)
+    ,CONFIG(SystemRoleType.CONFIG.id)
+    ,GATE(SystemRoleType.GATE.id)
+    ,LOGICS(SystemRoleType.LOGICS.id)
+    ,USERS(SystemRoleType.USERS.id)
+    ,MONITOR(SystemRoleType.MONITOR.id)
     ;
     public final int id;
     NodeType(int id) {

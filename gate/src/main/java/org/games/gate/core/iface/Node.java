@@ -10,4 +10,5 @@ public interface Node {
     interface GateHandler{
         void register(Session session, Node node);
     }
+    boolean isNodeSession(Session session);
 }

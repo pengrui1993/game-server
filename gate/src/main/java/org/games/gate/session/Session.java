@@ -12,9 +12,18 @@ public interface Session {
         void register(Object fd, Session session);
     }
     enum SessionType{
-        NO_ROLE,PLAYER,COMP_AUTH,COMP_BUS,COMP_CONFIG,COMP_LOGICS,COMP_USERS
+        NO_ROLE, USER,COMP_AUTH,COMP_BUS,COMP_CONFIG,COMP_LOGICS,COMP_USERS
     }
     default SessionType type(){ return SessionType.NO_ROLE;}
-    void writeAndFlush(Message msg, Runnable r);
+    default void writeAndFlush(Message msg, Runnable r){
+        writeAndFlush((Object)msg,r);
+    }
+    default void writeAndFlush(Object obj){
+        writeAndFlush(obj,()->{
+           // System.out.println("post write and flush");
+        });
+    }
+    void writeAndFlush(Object data,Runnable r);
     default void onCommand(Command command){}
+    Object getFd();
 }

@@ -1,12 +1,17 @@
 package org.games.gate;
 
+import org.games.event.Sync;
+import org.games.gate.net.Server;
+import org.games.gate.session.SessionManager;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.ApplicationPidFileWriter;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
 
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Scanner;
 
 /**
@@ -58,10 +63,15 @@ public class App
                             .forEach(clazz->out().println(clazz))
                     ;
                 }
+                case "netty":{
+                    line = scanner.nextLine().trim();
+                    ctx.getBean(SessionManager.class).broadcast(line);
+                }break;
                 default:
                     out().println(line);
             }
         }
+        ctx.getBean(Server.class).shutdown();
         ctx.close();
     }
 
@@ -83,4 +93,29 @@ org.springframework.boot.autoconfigure.ssl.SslAutoConfiguration
 org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration
 org.springframework.boot.autoconfigure.task.TaskSchedulingAutoConfiguration
      */
+    static Sync sync;
+    @Bean
+    public Sync sync(){
+        return sync=new Sync();
+    }
+    public static void exec(Runnable r){
+        if(Objects.isNull(r))
+            return;
+        if(Objects.nonNull(sync)) {
+            if(sync.inWorkerThread(Thread.currentThread())){
+                r.run();
+            }else{
+                sync.exec(r);
+            }
+        }else{
+            r.run();
+        }
+    }
+    public static void post(Runnable r){
+        if(Objects.isNull(r))
+            return;
+        if(Objects.isNull(sync))
+            throw new IllegalStateException("missing sync");
+        sync.exec(r);
+    }
 }

@@ -30,6 +30,7 @@
     <module>common/logic-ddz</module>
     <module>common/model-mahjong-tile</module>
     <module>common/model-poker-card</module>
+      <module>common/event-netty-impl</module>
   </modules>
 
     <properties>
