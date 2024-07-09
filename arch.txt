@@ -10,6 +10,23 @@ monitor
 ----
 db mq cache 
 ----
+C->G byte stream
+G->C byte stream
+
+user to gate user byte stream like protobuf
+service syncing query use http to get json
+service send and listen message of mq using json
+----
+gate query state of server's component by bus
+gate send server's event to mq by bus and pass by http
+gate listen server's event by mq
+
+bus notify server's event to gate ath users logics and config if it is cared
+
+mod1:all syc query pass bus
+mod2:bus supply a api to query others api of location of server node
+    and bus notify the event to sync changing about server node
+---
 duty and ability
 gate: for keep the session and hold 1.login info,2.user info
 bus: event dispatcher

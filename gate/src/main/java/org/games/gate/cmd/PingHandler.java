@@ -3,7 +3,7 @@ package org.games.gate.cmd;
 import org.games.cmd.Command;
 import org.games.cmd.CommandContext;
 import org.games.cmd.CommandHandler;
-import org.games.gate.ProgramContext;
+import org.games.support.server.ProgramContext;
 import org.games.gate.evt.GateEventEmitter;
 import org.games.gate.evt.PreWritePongEvent;
 import org.games.gate.evt.TriggerPingEvent;

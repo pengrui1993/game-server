@@ -11,47 +11,68 @@ import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.net.ConnectException;
+import java.util.Objects;
 import java.util.Optional;
 
-@Component
+//@Component
 public class Net {
 //    static final String HOST = System.getProperty("host", "127.0.0.1");
 //    static final int PORT = Integer.parseInt(System.getProperty("port", "8007"));
     static final int SIZE = Integer.parseInt(System.getProperty("size", "256"));
-    @Value("${config.gate.port:1999}")
+    @Value("${config.bus.port}")
     private int gatePort;
-    @Value("${config.gate.host:localhost}")
+    @Value("${config.bus.host}")
     private String gateHost;
-    @Value("${config.gate.hostname}")
+    @Value("${config.bus.hostname}")
     private String gateHostname;
     @Resource
-    private NetHandler handler;
-    EventLoopGroup group = new NioEventLoopGroup();
-    @PostConstruct
-    private void init(){
-        Bootstrap b = new Bootstrap();
-        b.group(group)
-                .channel(NioSocketChannel.class)
-                .option(ChannelOption.TCP_NODELAY, true)
-                .handler(new ChannelInitializer<SocketChannel>() {
-                    @Override
-                    public void initChannel(SocketChannel ch) throws Exception {
-                        ChannelPipeline p = ch.pipeline();
-                        //p.addLast(new LoggingHandler(LogLevel.INFO));
-                        p.addLast(handler);
-                    }
-                });
+    private NetHandler netHandler;
+    EventLoopGroup group;
+    private boolean conn(){
         try {// Start the client.
+            group = new NioEventLoopGroup();
+            Bootstrap b = new Bootstrap();
+            b.group(group)
+                    .channel(NioSocketChannel.class)
+                    .option(ChannelOption.TCP_NODELAY, true)
+                    .handler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        public void initChannel(SocketChannel ch) throws Exception {
+                            ChannelPipeline p = ch.pipeline();
+                            //p.addLast(new LoggingHandler(LogLevel.INFO));
+                            p.addLast(netHandler);
+                        }
+                    });
             closeFuture = b.connect(gateHost, gatePort).sync();
         } catch (InterruptedException e) {
             e.printStackTrace(System.err);
+            this.shutdown();
+            System.exit(-1);
         } catch (Throwable t){
             t.printStackTrace(System.err);
-            shutdown();
-            System.exit(-1);
+            return false;
+        }
+        return true;
+    }
+    @PostConstruct
+    private void init(){
+        while (true) {
+            if(Objects.nonNull(group))
+                group.shutdownGracefully();
+            if(conn())break;
+            sleep(5000);
         }
         toGate = closeFuture.channel();
         // Wait until the connection is closed.
+    }
+    static void sleep(long ms){
+        if(ms<=0)return;
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException ignore) {
+        }
+
     }
     public void shutdown(){
         try {

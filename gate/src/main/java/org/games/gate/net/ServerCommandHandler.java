@@ -3,7 +3,7 @@ package org.games.gate.net;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.games.cmd.Command;
-import org.games.gate.ProgramContext;
+import org.games.support.server.ProgramContext;
 import org.games.gate.evt.CommandEvent;
 import org.games.gate.evt.ConnectionErrorEvent;
 import org.games.gate.evt.GateEventEmitter;

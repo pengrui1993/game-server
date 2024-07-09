@@ -1,29 +1,27 @@
 package org.games.gate;
 
-import org.games.event.Sync;
+import org.games.support.server.Sync;
+import org.games.support.server.ProgramContext;
 import org.games.gate.evt.GateEventRegister;
 import org.games.gate.net.Server;
 import org.games.gate.session.SessionManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.ApplicationPidFileWriter;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.Bean;
 
-import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Scanner;
 
-/**
- * Hello world!
- *
- */
 //@SpringBootApplication()//app:org.games.gate.App$$SpringCGLIB$$0@54f66455
 @SpringBootApplication(proxyBeanMethods = false)//app:org.games.gate.App@749f539e
 public class App implements ProgramContext
 {
+    static final Logger log = LoggerFactory.getLogger(App.class);
     public static SpringApplication app(){
         return APP;
     }
@@ -32,9 +30,6 @@ public class App implements ProgramContext
     }
     static SpringApplication APP;
     static ConfigurableApplicationContext CTX;
-    static PrintStream out(){
-        return System.out;
-    }
     public static void main( String[] args ) {
         SpringApplication app = APP=new SpringApplication(App.class);
         app.addListeners(new ApplicationPidFileWriter());
@@ -45,14 +40,14 @@ public class App implements ProgramContext
         String line;
         outer:
         while(true){
-            out().println("wait command");
+            log.info("wait command");
             line=scanner.nextLine().trim();
             switch(line){
                 case "quit":
                     break outer;
                 case "beans":{
                     for (String name : ctx.getBeanDefinitionNames()) {
-                        out().println(ctx.getBean(name).getClass());
+                        log.info("{}",ctx.getBean(name).getClass());
                     }
                 }
                 case "auto":{
@@ -62,7 +57,7 @@ public class App implements ProgramContext
                             .map(Class::getName)
                             .filter(e->e.contains("AutoConfiguration"))
                             .distinct()
-                            .forEach(clazz->out().println(clazz))
+                            .forEach(log::info)
                     ;
                 }
                 case "netty":{
@@ -70,13 +65,13 @@ public class App implements ProgramContext
                     ctx.getBean(SessionManager.class).broadcast(line);
                 }break;
                 default:
-                    out().println(line);
+                    log.info(line);
             }
         }
         ctx.getBean(Server.class).shutdown();
         GateEventRegister bean = ctx.getBean(GateEventRegister.class);
         ctx.close();
-        System.out.println(bean);
+        log.info(bean.toString());
         sync.sync();
 
     }

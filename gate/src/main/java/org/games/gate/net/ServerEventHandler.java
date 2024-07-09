@@ -4,7 +4,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.games.event.Event;
-import org.games.gate.ProgramContext;
+import org.games.support.server.ProgramContext;
 import org.games.gate.evt.ConnectedEvent;
 import org.games.gate.evt.DisconnectedEvent;
 import org.games.gate.evt.GateEventEmitter;
@@ -66,6 +66,10 @@ public class ServerEventHandler extends ChannelInboundHandlerAdapter {
         if(msg instanceof Event event){
             pc.exec(()->{
                 final Session session = pc.get(SessionManager.class).get(ctx.channel());
+                if(Objects.isNull(session)){
+                    log.error("expected session but not");
+                    System.exit(-1);
+                }
                 pc.get(GateEventEmitter.class).emit(new NodeEvent(event,session));
             });
         }else{

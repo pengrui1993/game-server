@@ -2,7 +2,7 @@ package org.games.gate.session;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
-import org.games.gate.ProgramContext;
+import org.games.support.server.ProgramContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -3,6 +3,7 @@ package org.games.auth.net;
 import com.google.gson.Gson;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.games.constant.Const;
@@ -14,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import static org.games.auth.net.Net.SIZE;
 
 @Component
+@Sharable
 public class NetHandler extends ChannelInboundHandlerAdapter {
     private final ByteBuf firstMessage;
 

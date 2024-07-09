@@ -25,12 +25,13 @@
     <module>common/constant</module>
     <module>common/message</module>
     <module>monitor</module>
-      <module>common/logic-sc-xlch</module>
+    <module>common/logic-sc-xlch</module>
     <module>common/logic-sc-xzdd</module>
     <module>common/logic-ddz</module>
     <module>common/model-mahjong-tile</module>
     <module>common/model-poker-card</module>
-      <module>common/event-netty-impl</module>
+    <module>common/event-netty-impl</module>
+    <module>common/server-support</module>
   </modules>
 
     <properties>
@@ -57,6 +58,12 @@
       <dependency>
         <groupId>org.apache.mina</groupId>
         <artifactId>mina-core</artifactId>
+        <version>2.2.3</version>
+      </dependency>
+      <!-- https://mvnrepository.com/artifact/org.apache.mina/mina-http -->
+      <dependency>
+        <groupId>org.apache.mina</groupId>
+        <artifactId>mina-http</artifactId>
         <version>2.2.3</version>
       </dependency>
       <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->

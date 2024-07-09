@@ -11,10 +11,9 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import org.games.event.netty.NodeEventDecoder;
 import org.games.event.netty.NodeEventEncoder;
-import org.games.gate.ProgramContext;
+import org.games.support.server.ProgramContext;
 import org.games.gate.codec.CommandDecoder;
 import org.games.gate.codec.MessageEncoder;
-import org.games.gate.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,9 +21,6 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class Server{
-    public interface SessionAccessor{
-        Session get(Object ctx);
-    }
     static final Logger log = LoggerFactory.getLogger(Server.class);
     private final EventLoopGroup bossGroup = new NioEventLoopGroup(1);
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
