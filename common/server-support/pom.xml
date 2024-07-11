@@ -8,7 +8,6 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <groupId>org.games</groupId>
     <artifactId>server-support</artifactId>
     <packaging>jar</packaging>
 

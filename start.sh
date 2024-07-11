@@ -2,7 +2,7 @@
 
 #PORT=80
 #T_PID=$(netstat -tlnp|grep ":${PORT} "|grep -v "::${PORT} "|awk '{print $7}'|cut -d/ -f1)
-T_PID=`cat application.pid`
+T_PID=`cat $(ls ./*.pid)`
 if [[ !(0 -eq $?) ]]; then
   echo 'pid file not exit'
   exit 0
@@ -22,3 +22,5 @@ java \
 -verbose:class|module|gc|jni \
 -jar target\server-0.1.jar \
 2>&1 1>./server.log &
+
+#find . -name '*.jar'|grep -v './build*'|grep -v './monitor*'|grep -v './common*'|grep -v './lib*'

@@ -73,7 +73,7 @@ public final class Card {
     public static final int VK=13;
     public static final int VA=14;
     public static final int V2=15;
-    private final byte value;
+    public final byte value;
 
     public boolean isSpecialType(){
         return isJoker()||isStar();
@@ -129,6 +129,13 @@ public final class Card {
         System.out.println(DISPLAY_HEARTS);
         System.out.println(DISPLAY_SPADE);
         System.out.println(DISPLAY_DIAMOND);
+    }
+
+    public static int valueCmpWithNull(Card l,Card r){
+        if(l==r)return 0;
+        if(null==l)return 1;
+        if(null==r)return -1;
+        return valueCmp(l,r);
     }
     public static int valueCmp(Card l,Card r){
         return l.value-r.value;

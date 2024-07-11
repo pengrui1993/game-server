@@ -40,14 +40,15 @@ gate	auths
 
 
 ------
-gate is plugin architecture
-config dep:mq db
+server is plugin architecture
 bus dep:mq db
-users dep:mq db config
+config dep:mq db
 auth dep:mq db users config
+users dep:mq db config
 logics dep:mq db auth users config
+gate dep:bus config auth users logics
 
-monitor dep:mq db
+monitor dep:bus config auth users logics gate db
 
 
 

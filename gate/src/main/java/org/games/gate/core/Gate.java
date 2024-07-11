@@ -10,4 +10,7 @@ public interface Gate extends GateCaredServiceNodeEvent, GateForServiceEvent {
     default boolean prepared(){
         return allServerNodePrepared();
     }
+
+    void onAllServerNodePrepared();
+    void onSomeNodeCrash();
 }

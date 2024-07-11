@@ -8,7 +8,6 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <groupId>org.example</groupId>
     <artifactId>logic-sc-xzdd</artifactId>
     <packaging>jar</packaging>
 

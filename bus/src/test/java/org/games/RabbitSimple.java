@@ -28,6 +28,7 @@ public class RabbitSimple {
             boolean autoAck = true;
             ConnectionFactory factory = new ConnectionFactory();
             factory.setHost("localhost");
+//            factory.setVirtualHost("");
             connection = factory.newConnection();
             Channel channel = connection.createChannel();
             channel.queueDeclare(QUEUE_NAME, false, false, false, null);
