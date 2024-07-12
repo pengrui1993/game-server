@@ -9,19 +9,17 @@ import java.util.List;
 
 public class Combo {
     public static final Combo ZERO = new Combo(Collections.emptyList());
-    private final List<Card> cards;
-    private  ComboType type;
+    public final List<Card> cards;
+    private ComboType type;
     private final List<Card> primary = new ArrayList<>();
     public boolean isValid(){
         return type!=ComboType.UNKNOWN;
     }
-    public Combo(List<Card> cards) {
-        this.cards = new ArrayList<>(cards);
-        this.cards.sort((o1, o2) -> {
-            int v = -Card.valueCmp(o1, o2);
-            return v==0?-Card.typeCmp(o1,o2):v;
-        });
+    public Combo(List<Card> c) {
+        ArrayList<Card> cards = new ArrayList<>(c);
+        cards.sort(Card.cmp0());
         parse(this);
+        this.cards = Collections.unmodifiableList(cards);
     }
     private static void parse(Combo c){
         switch (c.cards.size()){
@@ -62,15 +60,15 @@ public class Combo {
                     c.type = ComboType.THIRD;
                 }
             }
-            case 4->{}
-            case 5->{}
-            case 6->{}
-            case 7->{}
-            case 8->{}
-            case 9->{}
+            case 4->{c.type = ComboType.UNKNOWN;}
+            case 5->{c.type = ComboType.UNKNOWN;}
+            case 6->{c.type = ComboType.UNKNOWN;}
+            case 7->{c.type = ComboType.UNKNOWN;}
+            case 8->{c.type = ComboType.UNKNOWN;}
+            case 9->{c.type = ComboType.UNKNOWN;}
             //TODO
-
         }
+        ;
     }
     public static Combo from(List<Card> cards){
         return new Combo(cards);
@@ -98,6 +96,9 @@ public class Combo {
         return v;
     }
     public boolean isBiggerThen(Combo other){
+        if(this==other)return false;
+        if(null==other)return false;
+        if(other==ZERO)return true;
         return isValid()&&other.isValid()&&cmp(other)>0;
     }
 }

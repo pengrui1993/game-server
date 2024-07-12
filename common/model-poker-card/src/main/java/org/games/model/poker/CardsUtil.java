@@ -14,11 +14,16 @@ public enum CardsUtil {
         }
         return new ArrayList<>(all);
     }
+    public static List<Card> allCardsWithoutStart(){
+        ArrayList<Card> arr = new ArrayList<>(allCards());
+        arr.remove(Card.STAR);
+        return arr;
+    }
     public static Card by(byte b){
         if(Objects.isNull(map)){
             map = Collections.unmodifiableMap(allCards()
                     .stream()
-                    .collect(Collectors.toMap(f->f.value,f->f)));
+                    .collect(Collectors.toMap(f->f.code, f->f)));
         }
         return map.get(b);
     }
