@@ -1,12 +1,12 @@
 package org.wolf;
 
-class HunterPhaser extends MajorPhaser {
+class PublishDiedInfoPhaser extends MajorPhaser{
     @Override
     public Major state() {
-        return Major.HUNTER;
+        return Major.DIED_INFO;
     }
     private final WolfKilling ctx;
-    HunterPhaser(WolfKilling ctx) {
+    PublishDiedInfoPhaser(WolfKilling ctx) {
         this.ctx = ctx;
     }
 }

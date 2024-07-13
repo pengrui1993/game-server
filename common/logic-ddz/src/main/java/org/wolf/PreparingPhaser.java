@@ -1,6 +1,7 @@
 package org.wolf;
 
 import org.wolf.action.Action;
+import org.wolf.core.Context;
 import org.wolf.core.Final;
 import org.wolf.evt.Event;
 import org.wolf.role.Role;
@@ -54,15 +55,15 @@ class PreparingPhaser extends MajorPhaser {
                 ,Roles.FARMER
         ));
         Collections.shuffle(list);
-        for (String s : joined) {
-            joinedUser.add(s);
+        for (String uid : joined) {
+            joinedUser.add(uid);
             switch (list.remove(0)){
-                case WITCH -> roles.put(s,new Witch());
-                case HUNTER -> roles.put(s,new Hunter());
-                case PREDICTOR -> roles.put(s,new Predictor());
-                case PROTECTOR -> roles.put(s,new Protector());
-                case WOLF -> roles.put(s,new Wolf());
-                case FARMER -> roles.put(s,new Farmer());
+                case WITCH -> roles.put(uid,new Witch(ctx));
+                case HUNTER -> roles.put(uid,new Hunter(ctx));
+                case PREDICTOR -> roles.put(uid,new Predictor(ctx));
+                case PROTECTOR -> roles.put(uid,new Protector(ctx));
+                case WOLF -> roles.put(uid,new Wolf(ctx));
+                case FARMER -> roles.put(uid,new Farmer(ctx));
             }
         }
         ctx.dayNumber = 0;
@@ -70,7 +71,7 @@ class PreparingPhaser extends MajorPhaser {
         ctx.joinedUser = Collections.unmodifiableList(joinedUser);
         out.println("game start ok");
         for (Map.Entry<String, Role> e : roles.entrySet()) {
-            System.out.println(e.getKey()+":"+e.getValue());
+            System.out.println(e.getKey()+":"+e.getValue().role());
         }
     }
 

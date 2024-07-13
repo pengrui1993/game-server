@@ -7,11 +7,15 @@ import org.wolf.evt.Event;
 import org.wolf.role.Predictor;
 import org.wolf.role.Role;
 import org.wolf.role.Witch;
+import org.wolf.util.CalcContext;
 import org.wolf.util.ConnectionHandler;
 
 import java.util.*;
 import static org.wolf.core.Context.*;
-
+/*
+flow:
+https://gl.ali213.net/html/2017-3/156419.html
+ */
 public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
     final String id;
     //userId
@@ -25,6 +29,7 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
     boolean gameDone = false;
     int dayNumber;
     private ConnectionHandler connHandler;
+    CalcContext calcCtx = new CalcContext();
     public WolfKilling(String id,String creator){
         this.id = id;
         this.creator = creator;

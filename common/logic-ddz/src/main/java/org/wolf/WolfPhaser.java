@@ -36,7 +36,8 @@ class WolfPhaser extends MajorPhaser {
                     ctx.changeState(new WitchPhaser(ctx));
                     return;
                 }
-                boolean witchCanAction = ctx.getWitch().alive()&&ctx.getWitch().hasAnyMedicine();
+                boolean witchCanAction = ctx.getWitch().alive()
+                        &&ctx.getWitch().hasAnyMedicine();
                 boolean predictorCanAction = ctx.getPredictor().alive();
                 boolean protectorCanAction = ctx.getPredictor().alive();
                 if(predictorCanAction){

@@ -8,6 +8,7 @@ public interface Context <PHA extends Enum<PHA>
         ,STA extends Phaser<PHA>
         ,CTX extends Context<PHA,STA,CTX>>{
     default void changeState(STA next){
+//        STA tmp = cur();
         cur().end();
         next.begin();
         cur(next);
