@@ -37,41 +37,47 @@ class PreparingPhaser extends MajorPhaser {
     }
     @Override
     public void end() {
+        final Map<String, Role> roles = new HashMap<>();
+        final List<String> joinedUser = new ArrayList<>();
+        List<Roles> list = new ArrayList<>(List.of(
+                Roles.HUNTER
+                ,Roles.PREDICTOR
+                ,Roles.PROTECTOR
+                ,Roles.WITCH
+                ,Roles.WOLF
+                ,Roles.WOLF
+                ,Roles.WOLF
+                ,Roles.WOLF
+                ,Roles.FARMER
+                ,Roles.FARMER
+                ,Roles.FARMER
+                ,Roles.FARMER
+        ));
+        Collections.shuffle(list);
+        for (String s : joined) {
+            joinedUser.add(s);
+            switch (list.remove(0)){
+                case WITCH -> roles.put(s,new Witch());
+                case HUNTER -> roles.put(s,new Hunter());
+                case PREDICTOR -> roles.put(s,new Predictor());
+                case PROTECTOR -> roles.put(s,new Protector());
+                case WOLF -> roles.put(s,new Wolf());
+                case FARMER -> roles.put(s,new Farmer());
+            }
+        }
         ctx.dayNumber = 0;
+        ctx.roles = Collections.unmodifiableMap(roles);
+        ctx.joinedUser = Collections.unmodifiableList(joinedUser);
+        out.println("game start ok");
+        for (Map.Entry<String, Role> e : roles.entrySet()) {
+            System.out.println(e.getKey()+":"+e.getValue());
+        }
     }
 
     protected void onStart(String who){
         if(Objects.equals(who,master)){
             if(joined.size()==LIMIT_PLAYER){
-                List<Roles> list = new ArrayList<>(List.of(
-                        Roles.HUNTER
-                        ,Roles.PREDICTOR
-                        ,Roles.PROTECTOR
-                        ,Roles.WITCH
-                        ,Roles.WOLF
-                        ,Roles.WOLF
-                        ,Roles.WOLF
-                        ,Roles.WOLF
-                        ,Roles.FARMER
-                        ,Roles.FARMER
-                        ,Roles.FARMER
-                        ,Roles.FARMER
-                ));
-                Collections.shuffle(list);
-                for (String s : joined) {
-                    ctx.joinedUser.add(s);
-                    Roles cur = list.remove(0);
-                    switch (cur){
-                        case WITCH -> ctx.roles.put(s,new Witch());
-                        case HUNTER -> ctx.roles.put(s,new Hunter());
-                        case PREDICTOR -> ctx.roles.put(s,new Predictor());
-                        case PROTECTOR -> ctx.roles.put(s,new Protector());
-                        case WOLF -> ctx.roles.put(s,new Wolf());
-                        case FARMER -> ctx.roles.put(s,new Farmer());
-                    }
-                }
                 ctx.changeState(new WolfPhaser(ctx));
-                out.println("game start ok");
             }else{
                 out.println("must have 12 player to start the game");
             }
@@ -79,6 +85,7 @@ class PreparingPhaser extends MajorPhaser {
             out.println("sender is not master,sender:"+who);
         }
     }
+
     protected void onJoin(String who){
         if(joined.contains(who)){
             out.println("duplicated join game , ignore that,user:"+who);

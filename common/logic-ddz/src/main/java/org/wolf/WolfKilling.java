@@ -19,10 +19,9 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
     @Final
     String master;
 
-
     private MajorPhaser cur;
-    final List<String> joinedUser = new ArrayList<>();
-    final Map<String, Role> roles=new HashMap<>();
+    @Final List<String> joinedUser = new ArrayList<>();
+    @Final Map<String, Role> roles=new HashMap<>();
     boolean gameDone = false;
     int dayNumber;
     private ConnectionHandler connHandler;
@@ -41,7 +40,18 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
     public boolean isGameOver(){
         return gameDone;
     }
-
+    public int index(String user){
+        if(Objects.isNull(user))return -1;
+        final List<String> users = this.joinedUser;
+        if(users.isEmpty())return -1;
+        int val = -1;
+        for(int i=0;i<users.size();i++)
+            if(Objects.equals(user,users.get(i))){
+                val = i;
+                break;
+            }
+        return val;
+    }
     @Override
     public void onEvent(int cmd, Object... params) {
         if(cmd==Event.CONNECTION.ordinal())connHandler.handle(params);
@@ -81,6 +91,7 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
                 () -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user1")
                 ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user2")
                 ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user3")
+                ,() -> k.onEvent(Event.ACTION.ordinal(), Action.LEFT.ordinal(),"user4")
                 ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user4")
                 ,() -> k.onEvent(Event.ACTION.ordinal(), Action.START_GAME.ordinal(),"user1")
                 ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user5")
@@ -93,7 +104,6 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
                 ,() -> k.onEvent(Event.ACTION.ordinal(), Action.START_GAME.ordinal(),"user12")
                 ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user12")
                 ,() -> k.onEvent(Event.ACTION.ordinal(), Action.START_GAME.ordinal(),"user1")
-
 
                 ,WolfKilling::loop
         );
