@@ -6,7 +6,7 @@ public enum Action {
     ,LEFT
     ,START_GAME
     ,WOLF_KILL
-
+    ,WITCH_ACTION
     ;
 
     public static Action from(int action) {

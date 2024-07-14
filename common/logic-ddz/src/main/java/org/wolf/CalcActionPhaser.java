@@ -18,30 +18,31 @@ class CalcActionPhaser extends MajorPhaser {
     @Override
     public void begin() {
         final CalcContext cc = ctx.calcCtx;
-        if(Objects.nonNull(cc.drugKilledUserId)&&Objects.nonNull(cc.medicineSavedUserId)){
+        if(cc.isWitchInvalidOperation()){
             out.println("invalid witch action both of saved and killed");
             ctx.changeState(new OverPhaser(ctx));
             return;
         }
-        if(Objects.equals(cc.protectedUserId,cc.medicineSavedUserId)
-            && Objects.nonNull(cc.protectedUserId)
-        ){ // medicine and protected same one
+        if(cc.isDoubleSaved()){ // medicine and protected same one
             out.println(cc.protectedUserId+" died cause by save and protecte same one");
+            cc.calcDiedUserId = cc.protectedUserId;
             if(ctx.roles.get(cc.protectedUserId).role()== Roles.HUNTER){
                 cc.hunterAction = true;
+                out.println("killed hunter");
                 ctx.changeState(new HunterPhaser(ctx));
-            }else{
-                ctx.changeState(new PublishDiedInfoPhaser(ctx));
+                return;
             }
+            ctx.changeState(new PublishDiedInfoPhaser(ctx));
             return;
         }
-        if(Objects.isNull(cc.killingTargetUserId)){  //no anyone died
+        if(cc.isWolfEmptyKilling()){  //no anyone died
             out.println("wolf kill nil");
             cc.calcDiedUserId = null;
             ctx.changeState(new PublishDiedInfoPhaser(ctx));
             return;
         }
-        if(Objects.equals(cc.killingTargetUserId,cc.protectedUserId)){
+        final boolean protectorWorking = Objects.equals(cc.killingTargetUserId,cc.protectedUserId);
+        if(protectorWorking){
             cc.calcDiedUserId = null;
             ctx.changeState(new PublishDiedInfoPhaser(ctx));
             out.println("protector protected will be killed user");
@@ -53,6 +54,7 @@ class CalcActionPhaser extends MajorPhaser {
     }
     @Override
     public void end() {
-
+        MajorPhaser cur = ctx.cur();
+        System.out.println(cur);
     }
 }

@@ -1,7 +1,6 @@
 package org.wolf;
 
 import org.wolf.action.Action;
-import org.wolf.core.Context;
 import org.wolf.core.Final;
 import org.wolf.evt.Event;
 import org.wolf.role.Role;
@@ -57,11 +56,24 @@ class PreparingPhaser extends MajorPhaser {
         Collections.shuffle(list);
         for (String uid : joined) {
             joinedUser.add(uid);
-            switch (list.remove(0)){
-                case WITCH -> roles.put(uid,new Witch(ctx));
-                case HUNTER -> roles.put(uid,new Hunter(ctx));
-                case PREDICTOR -> roles.put(uid,new Predictor(ctx));
-                case PROTECTOR -> roles.put(uid,new Protector(ctx));
+            Roles r;
+            switch (r=list.remove(0)){
+                case WITCH -> {
+                    roles.put(uid,new Witch(ctx));
+                    ctx.putRole(r,uid);
+                }
+                case HUNTER -> {
+                    roles.put(uid,new Hunter(ctx));
+                    ctx.putRole(r,uid);
+                }
+                case PREDICTOR -> {
+                    roles.put(uid,new Predictor(ctx));
+                    ctx.putRole(r,uid);
+                }
+                case PROTECTOR -> {
+                    roles.put(uid,new Protector(ctx));
+                    ctx.putRole(r,uid);
+                }
                 case WOLF -> roles.put(uid,new Wolf(ctx));
                 case FARMER -> roles.put(uid,new Farmer(ctx));
             }
@@ -69,10 +81,11 @@ class PreparingPhaser extends MajorPhaser {
         ctx.dayNumber = 0;
         ctx.roles = Collections.unmodifiableMap(roles);
         ctx.joinedUser = Collections.unmodifiableList(joinedUser);
-        out.println("game start ok");
+        out.println("game start ok, show all players role: ******************");
         for (Map.Entry<String, Role> e : roles.entrySet()) {
             System.out.println(e.getKey()+":"+e.getValue().role());
         }
+        out.println("******************");
     }
 
     protected void onStart(String who){

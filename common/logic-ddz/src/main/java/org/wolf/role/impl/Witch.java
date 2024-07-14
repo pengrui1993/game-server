@@ -7,14 +7,18 @@ public class Witch implements org.wolf.role.Witch {
     public Witch(Context ctx) {
         this.ctx = ctx;
     }
-
     @Override
-    public boolean hasAnyMedicine() {
+    public boolean alive() {
         return false;
     }
 
     @Override
-    public boolean alive() {
+    public boolean hasDrug() {
+        return false;
+    }
+
+    @Override
+    public boolean hasMedicine() {
         return false;
     }
 }

@@ -2,6 +2,7 @@ package org.wolf;
 
 import org.wolf.action.Action;
 import org.wolf.evt.Event;
+import org.wolf.util.ChangeStateUtil;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,32 +26,21 @@ class WolfPhaser extends MajorPhaser {
         for (String s : ctx.aliveWolf()) {
             wolfSelectResult.put(s,null);
         }
+        out.println("wolfs "+wolfSelectResult);
     }
     @Override
     public void update(float dt) {
         last+=dt;
         if(Objects.nonNull(result))return;
-        if(last-enterPhaserTime>=15){
-            final Runnable changer = ()->{
-                if(firstTimes){
-                    ctx.changeState(new WitchPhaser(ctx));
-                    return;
-                }
-                boolean witchCanAction = ctx.getWitch().alive()
-                        &&ctx.getWitch().hasAnyMedicine();
-                boolean predictorCanAction = ctx.getPredictor().alive();
-                boolean protectorCanAction = ctx.getPredictor().alive();
-                if(predictorCanAction){
-                    ctx.changeState(new PredictorPhaser(ctx));
-                }else if(witchCanAction){
-                    ctx.changeState(new WitchPhaser(ctx));
-                }else if(protectorCanAction){
-                    ctx.changeState(new ProtectorPhaser(ctx));
-                }else{
-                    ctx.changeState(new CalcActionPhaser(ctx));
-                }
-            };
-            final Collection<String> selectedId = wolfSelectResult.values();
+        if(last-enterPhaserTime>=5){
+            out.println("wolf kill phaser timeout");
+            final Runnable changer = ()-> ChangeStateUtil.change(ctx,firstTimes
+                    ,()->new WitchPhaser(ctx)
+                    ,()->new PredictorPhaser(ctx)
+                    ,()->new ProtectorPhaser(ctx)
+                    ,()->new CalcActionPhaser(ctx)
+            );
+            final Collection<String> selectedId = wolfSelectResult.values().stream().filter(Objects::nonNull).toList();
             if(selectedId.isEmpty()){
                 changer.run();
                 return;
@@ -71,7 +61,11 @@ class WolfPhaser extends MajorPhaser {
         }
     }
     void wolfSelect(String wolf,String target){
-        if(Objects.isNull(out))return;
+        if(Objects.isNull(wolf))return;
+        if(!wolfSelectResult.containsKey(wolf)){
+            out.println(wolf+" is not wolf");
+            return;
+        }
         final String pre = wolfSelectResult.get(wolf);
         wolfSelectResult.put(wolf,target);
         out.printf("wolf:%s select %s, pre selected:%s\n",wolf,target,pre);
@@ -98,10 +92,13 @@ class WolfPhaser extends MajorPhaser {
     }
     @Override
     public void end() {
+        out.println("vote result:"+wolfSelectResult);
+        ctx.calcCtx.clear();
+        ctx.calcCtx.killingTargetUserId = result;
         if(Objects.isNull(result)){
             out.println("empty kill result");
         }else{
-            out.println(result+" died");
+            out.println(result+" will be killed");
         }
     }
 
@@ -112,6 +109,6 @@ class WolfPhaser extends MajorPhaser {
 
     public static void main(String[] args) {
         String s = String.class.cast(null);
-        System.out.println(s);
+        System.out.println(s);//null
     }
 }

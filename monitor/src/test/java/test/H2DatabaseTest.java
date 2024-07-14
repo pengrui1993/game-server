@@ -5,6 +5,10 @@ import org.h2.server.web.JakartaDbStarter;
 import org.h2.tools.Server;
 
 import java.sql.*;
+
+/*
+spring.h2.console.enabled=true
+ */
 public class H2DatabaseTest {
 
     void test(){

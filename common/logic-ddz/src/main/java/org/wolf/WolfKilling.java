@@ -3,37 +3,41 @@ package org.wolf;
 import org.wolf.action.Action;
 import org.wolf.core.Context;
 import org.wolf.core.Final;
+import org.wolf.core.Read;
+import org.wolf.core.Write;
 import org.wolf.evt.Event;
 import org.wolf.role.Predictor;
 import org.wolf.role.Role;
+import org.wolf.role.Roles;
 import org.wolf.role.Witch;
 import org.wolf.util.CalcContext;
 import org.wolf.util.ConnectionHandler;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+
 import static org.wolf.core.Context.*;
 /*
 flow:
 https://gl.ali213.net/html/2017-3/156419.html
  */
 public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
-    final String id;
-    //userId
-    final String creator;
+    final String id;//instance id
+    final String creator; //userId
+    public final long createdTime = now();
     @Final
     String master;
-
     private MajorPhaser cur;
     @Final List<String> joinedUser = new ArrayList<>();
     @Final Map<String, Role> roles=new HashMap<>();
     boolean gameDone = false;
     int dayNumber;
     private ConnectionHandler connHandler;
-    CalcContext calcCtx = new CalcContext();
+    final CalcContext calcCtx = new CalcContext();
+    private final Map<Roles,String> singleRolesId = new HashMap<>();
     public WolfKilling(String id,String creator){
         this.id = id;
-        this.creator = creator;
-        this.master = creator;
+        this.creator = master =creator;
         connHandler = new ConnectionHandler((params)->{
 
         },(params)->{
@@ -42,9 +46,11 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
         cur = new PreparingPhaser(this);
         cur.begin();
     }
+    @Read
     public boolean isGameOver(){
         return gameDone;
     }
+    @Read
     public int index(String user){
         if(Objects.isNull(user))return -1;
         final List<String> users = this.joinedUser;
@@ -62,7 +68,6 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
         if(cmd==Event.CONNECTION.ordinal())connHandler.handle(params);
         Context.super.onEvent(cmd, params);
     }
-
     @Override
     public MajorPhaser cur() {
         return this.cur;
@@ -72,14 +77,29 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
         assert null!=s;
         this.cur = s;
     }
-    String witchUserId;
-    //TODO
-    public Witch getWitch() {
-        return roles.get(witchUserId).castTo(org.wolf.role.impl.Witch.class);
+    @Write
+    public void putRole(Roles r, String uid) {
+        singleRolesId.put(r,uid);
     }
-    public Predictor getPredictor(){ return ()->true;}
+    @Read
+    public String getId(Roles role){
+        return singleRolesId.get(role);
+    }
+    @Read
+    public Role get(Roles role){
+        return roles.get(getId(role));
+    }
+    @Read
+    public <T extends Role> T get(Roles r,Class<T> c){
+        return get(r).castTo(c);
+    }
+    @Read
     public List<String> aliveWolf() {
-        return Collections.emptyList();
+        return roles.entrySet()
+                .stream()
+                .filter(e->e.getValue().role()== Roles.WOLF)
+                .map(Map.Entry::getKey)
+                .toList();
     }
 
 
@@ -88,9 +108,18 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
     static long last;
     static final long start = last = now0();
     static void loop(){
-        if (now0() - start >= 5000) k.gameDone = true;
-        else queue.offer(WolfKilling::loop);
+        if (now0() - start >= 3000) {
+            if(WolfPhaser.class==k.cur().getClass()){
+                queue.offer(WolfKilling::loop);
+                return;
+            }
+            k.gameDone = true;
+            k.cur.out.println("stop by test at:"+k.cur().getClass());
+        }else queue.offer(WolfKilling::loop);
     }
+
+
+
     public static void main(String[] args) {
         List<Runnable> o = List.of(
                 () -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user1")
@@ -109,6 +138,33 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
                 ,() -> k.onEvent(Event.ACTION.ordinal(), Action.START_GAME.ordinal(),"user12")
                 ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user12")
                 ,() -> k.onEvent(Event.ACTION.ordinal(), Action.START_GAME.ordinal(),"user1")
+                ,() -> {// wolf kill emulate
+                    ThreadLocalRandom r = ThreadLocalRandom.current();
+                    List<String> users = k.joinedUser;
+                    for (String s : k.aliveWolf()) {
+                        k.onEvent(Event.ACTION.ordinal(), Action.WOLF_KILL.ordinal(),s,users.get(r.nextInt(users.size())));
+                    }
+                }
+                ,()->{
+                    if(k.cur().getClass()== WitchPhaser.class){
+                        ThreadLocalRandom r = ThreadLocalRandom.current();
+                        if(r.nextBoolean()){
+                            if(Objects.nonNull(k.calcCtx.killingTargetUserId)
+                                    &&r.nextBoolean()
+                                    &&k.get(Roles.WITCH, Witch.class).hasMedicine()){
+                                k.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),k.getId(Roles.WITCH),"save");
+                            }else{
+                                boolean cond = k.get(Roles.WITCH, Witch.class).hasDrug()&&r.nextBoolean();
+                                if(!cond)return;
+                                List<String> users = k.joinedUser;
+                                k.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal()
+                                    ,k.getId(Roles.WITCH),"kill",users.get(r.nextInt(users.size())));
+                            }
+                        }else{
+                            k.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),k.getId(Roles.WITCH),"cancel");
+                        }
+                    }
+                }
 
                 ,WolfKilling::loop
         );
@@ -117,7 +173,7 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
         while(!k.isGameOver()){
             //time
             final long tmp = now0();
-            final float dt = (last-tmp)/1000.f;
+            final float dt = (tmp-last)/1000.f;
             last = tmp;
             //state
             k.onTick(dt);

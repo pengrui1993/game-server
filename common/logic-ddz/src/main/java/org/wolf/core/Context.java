@@ -7,15 +7,20 @@ import java.util.function.Consumer;
 public interface Context <PHA extends Enum<PHA>
         ,STA extends Phaser<PHA>
         ,CTX extends Context<PHA,STA,CTX>>{
+    @Write
     default void changeState(STA next){
 //        STA tmp = cur();
         cur().end();
-        next.begin();
         cur(next);
+        next.begin();
     }
+    @Read
     STA cur();
+    @Write
     void cur(STA s);
+    @Write
     default void onTick(float dt){cur().update(dt);}
+    @Write
     default void onEvent(int cmd,Object... params){cur().event(cmd,params);}
     default void sleep(long l){ sleep0(l);}
     default long now(){ return now0();}

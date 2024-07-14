@@ -3,6 +3,7 @@ package org.games.graphql;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
@@ -11,7 +12,9 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 import java.util.Map;
 
 //http://localhost:8080/graphiql
-@SpringBootApplication()
+@SpringBootApplication(proxyBeanMethods = false
+        ,exclude = DataSourceAutoConfiguration.class
+)
 public class App {
     public static void main(String[] args) {
         ConfigurableApplicationContext ctx = SpringApplication.run(App.class);
