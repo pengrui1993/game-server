@@ -22,7 +22,7 @@ gate send server's event to mq by bus and pass by http
 gate listen server's event by mq
 
 bus notify server's event to gate ath users logics and config if it is cared
-
+bus provide a sync write,mq provide a async write
 mod1:all syc query pass bus
 mod2:bus supply a api to query others api of location of server node
     and bus notify the event to sync changing about server node

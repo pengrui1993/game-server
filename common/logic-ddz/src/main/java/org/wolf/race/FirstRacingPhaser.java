@@ -30,6 +30,7 @@ class FirstRacingPhaser extends MinorPhaser{
         raceDown = handsResult.entrySet().stream().filter(e->!e.getValue()).map(Map.Entry::getKey).toList();
         timeLimit = 30;
     }
+    boolean test;
     @Override
     public Minor state() {
         return Minor.TALKING_TO_RACE;
@@ -39,7 +40,7 @@ class FirstRacingPhaser extends MinorPhaser{
     public void update(float dt) {
         last+=dt;
         curLast+=dt;
-        if(curLast>timeLimit){
+        if(curLast>timeLimit||test){
             next();
         }
     }
@@ -58,8 +59,9 @@ class FirstRacingPhaser extends MinorPhaser{
         ThreadLocalRandom r = ThreadLocalRandom.current();
         startUser = curUser = raceUp.get(r.nextInt(raceUp.size()));
         talkingCCW = r.nextBoolean();
-        out.println("current start with counterclockwise:"+talkingCCW);
+        out.println("first,current start with counterclockwise:"+talkingCCW);
         last = curLast = 0;
+        test = false;
     }
 
     @Override
@@ -67,12 +69,16 @@ class FirstRacingPhaser extends MinorPhaser{
         Event event = Event.from(type);
         switch (event){
             case ACTION -> {
-                if(params.length<2){
-                    out.println("race choice action require(action,sender,yes/no)");
+                if(params.length<1){
+                    out.println("first,params require more then 1");
                     return;
                 }
                 switch (Action.from(Integer.class.cast(params[0]))){
                     case RACE_HANDS_DOWN -> {
+                        if(params.length<2){
+                            out.println("race choice action require(action,sender,yes/no)");
+                            return;
+                        }
                         final String sender = String.class.cast(params[1]);
                         Boolean b = handsState.get(sender);
                         if(Objects.isNull(b)||!b){
@@ -85,9 +91,13 @@ class FirstRacingPhaser extends MinorPhaser{
                         out.println(sender+" cancel race");
                         next();
                     }
+                    case TEST_DONE -> {
+                        out.println("first racing test enabled");
+                        test = true;
+                    }
                 }
             }
-            case DATA -> {
+            case SOUNDS -> {
                 if(params.length<2){
                     out.println("missing data ");
                     return;

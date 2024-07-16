@@ -16,16 +16,17 @@ class TalkingPhaser extends MajorPhaser {
         return Major.TALKING;
     }
     private final WolfKilling ctx;
-    private final boolean orderingCCW;
+    private @Final boolean orderingCCW;
     private String curUser;
-    @Final String startUser;
+    private @Final String startUser;
     @Final String sergeant;
     float last,curLast;
-    TalkingPhaser(WolfKilling ctx, boolean orderingCCW) {
+    TalkingPhaser(WolfKilling ctx) {
         this.ctx = ctx;
-        this.orderingCCW = orderingCCW;
     }
     final List<String> aliveUser = new ArrayList<>();
+    @Final float limit;
+    boolean test;
     @Override
     public void begin() {
         sergeant = ctx.sergeant;
@@ -37,29 +38,55 @@ class TalkingPhaser extends MajorPhaser {
                 .toList();
         ctx.joinedUsers.forEach(e->{if(living.contains(e))aliveUser.add(e);});
         startUser = curUser = aliveUser.get(ThreadLocalRandom.current().nextInt(aliveUser.size()));
+        this.orderingCCW = ctx.talkingOrderingCCW;
+        limit = ctx.setting.talkingLimit;
+        test = false;
+        ctx.curDayTalkingTimes++;
+        out.println("talking phaser begin , ordering ccw:"+this.orderingCCW);
+    }
+
+    @Override
+    public void end() {
+        out.println("talking phaser end");
     }
 
     @Override
     public void event(int type, Object... params) {
         switch (Event.from(type)){
             case ACTION -> {
-                if(params.length<3){
+                if(params.length<1){
+                    out.println("talking phaser action,require 1 params");
                     return;
                 }
                 switch (Action.from(Integer.class.cast(params[0]))){
                     case TALKING_NEXT->{
-
+                        if(params.length<2){
+                            out.println("talking phaser,talking require 3 params");
+                            return;
+                        }
+                        String sender = String.class.cast(params[1]);
+                        if(!Objects.equals(sender,curUser)){
+                            out.println("talking phaser,talking next must be current user");
+                            return;
+                        }
+                        next();
+                    }
+                    case TEST_DONE -> {
+                        out.println("talking phaser,test enabled");
+                        test = true;
                     }
                 }
             }
+            case SOUNDS -> {
+
+            }
         }
     }
-
     @Override
     public void update(float dt) {
         last+=dt;
         curLast+=dt;
-        if(curLast>=30){
+        if(curLast>=limit||test){
             next();
         }
     }

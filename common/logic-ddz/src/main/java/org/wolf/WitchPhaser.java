@@ -3,7 +3,6 @@ package org.wolf;
 import org.wolf.action.Action;
 import org.wolf.core.Final;
 import org.wolf.evt.Event;
-import org.wolf.role.Role;
 import org.wolf.role.Roles;
 import org.wolf.role.Witch;
 
@@ -34,6 +33,8 @@ class WitchPhaser extends MajorPhaser {
         witchId = ctx.getId(Roles.WITCH);
         state = Objects.nonNull(ctx.calcCtx.killingTargetUserId)&&witch.hasMedicine()
                     ?State.SAVING:State.KILLING;
+        out.println("enter witch phaser,first times:"+firstTimes);
+
     }
     private void onWitchAction(Object... params){
         if(params.length < 3) {
@@ -41,7 +42,6 @@ class WitchPhaser extends MajorPhaser {
             return;
         }
         String who = String.class.cast(params[1]);
-        String action = String.class.cast(params[2]);
         if(!Objects.equals(witchId,who)){
             out.println("cannot match witch user id");
             return;
@@ -55,16 +55,16 @@ class WitchPhaser extends MajorPhaser {
             if(protectorCanAction){
                 ctx.changeState(new ProtectorPhaser(ctx));
             }else{
-                ctx.changeState(new CalcActionPhaser(ctx));
+                ctx.changeState(new CalcDiedPhaser(ctx));
             }
         };
+        String action = String.class.cast(params[2]);
         switch (action){
             case "save"->{
                 if(state!=State.SAVING)return;
+                out.println("on witch save");
                 ctx.calcCtx.medicineSavedUserId = ctx.calcCtx.killingTargetUserId;
-                out.println("do saving");
-                if(witch.hasDrug())state = State.KILLING;
-                else change.run();
+                change.run();
             }
             case "kill"->{
                 if(params.length<4){
@@ -80,10 +80,12 @@ class WitchPhaser extends MajorPhaser {
                     out.println("target already died");
                     return;
                 }
+                out.println("on witch kill");
                 ctx.calcCtx.drugKilledUserId = target;
                 change.run();
             }
             case "cancel"-> {
+                out.println("on witch cancel");
                 if(state==State.SAVING){
                     ctx.calcCtx.medicineSavedUserId = null;
                     if(witch.hasDrug())state = State.KILLING;

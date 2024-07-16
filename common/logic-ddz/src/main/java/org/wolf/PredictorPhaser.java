@@ -33,15 +33,16 @@ class PredictorPhaser extends MajorPhaser {
         predictorUserId = ctx.getId(Roles.PREDICTOR);
         predictor = ctx.get(Roles.PREDICTOR).castTo(Predictor.class);
         last = 0;
+        limit = ctx.setting.predictorActionTimeoutLimit;
     }
     @Override
     public void end() {
-        out.println("exit");
+        out.println("predictor phaser exit,result:"+verify);
     }
     float last;
+    float limit;
     @Override
     public void update(float dt) {
-        last+=dt;
         Runnable change = ()->{
             if(firstTimes){
                 ctx.changeState(new RacingPhaser(ctx));
@@ -52,11 +53,12 @@ class PredictorPhaser extends MajorPhaser {
                 }else if(ctx.get(Roles.PROTECTOR).alive()){
                     ctx.changeState(new ProtectorPhaser(ctx));
                 }else{
-                    ctx.changeState(new CalcActionPhaser(ctx));
+                    ctx.changeState(new CalcDiedPhaser(ctx));
                 }
             }
         };
-        if(last>=15){
+        last+=dt;
+        if(last>=limit){
             change.run();
         }
         if(Objects.nonNull(verify)){
@@ -66,8 +68,9 @@ class PredictorPhaser extends MajorPhaser {
     @Override
     public void event(int type, Object... params) {
         switch (Event.from(type)){
+            case NULL -> {}
             case ACTION -> {
-                if(params.length<3){
+                if(params.length<1){
                     out.println("action on predictor phrase require 3 params(action,who,verify)");
                     return;
                 }
@@ -81,10 +84,11 @@ class PredictorPhaser extends MajorPhaser {
                         String target = String.class.cast(params[2]);
                         verify = Map.entry(target,Roles.WOLF==ctx.get(target).role());
                         //notify
-                        out.println("verify "+verify.getKey()+" result:"+verify.getValue());
+                        out.println("predictor phaser,verify "+verify.getKey()+" result:"+verify.getValue());
                         predictor.ifIsThen(org.wolf.role.impl.Predictor.class
                                 ,p-> p.verifies.put(verify.getKey(),verify.getValue()));
                     }
+                    case UNKNOWN -> {}
                 }
             }
         }

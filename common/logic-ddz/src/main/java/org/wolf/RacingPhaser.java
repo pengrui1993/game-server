@@ -32,6 +32,12 @@ class RacingPhaser extends MajorPhaser implements Context {
     public void update(float dt) {
         cur.update(dt);
     }
+
+    @Override
+    public void event(int type, Object... params) {
+        cur.event(type, params);
+    }
+
     @Override
     public MinorPhaser cur() {
         return cur;
@@ -52,7 +58,7 @@ class RacingPhaser extends MajorPhaser implements Context {
     public void setSergeant(String sergeant) {
         if(cur.state()==Minor.DONE){
             this.sergeant = sergeant;
-            ctx.changeState(new CalcActionPhaser(ctx));
+            ctx.changeState(new CalcDiedPhaser(ctx));
         }else{
             out.println("invalid state to set sergeant");
         }

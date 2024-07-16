@@ -1,5 +1,8 @@
 package org.wolf.util;
 
+import org.wolf.core.Read;
+import org.wolf.core.Write;
+
 import java.util.Objects;
 
 public class CalcContext {
@@ -8,22 +11,26 @@ public class CalcContext {
     public String protectedUserId = null;
     public String medicineSavedUserId = null;//witch
     public String drugKilledUserId = null;
-    public boolean hunterAction;
 
     //out
     public String calcDiedUserId;
-
+    public String calcDiedUserIdByWitch;
+    @Write
     public void clear(){
         killingTargetUserId = null;
         protectedUserId = null;
         medicineSavedUserId = null;
         drugKilledUserId = null;
-        hunterAction = false;
+
+        calcDiedUserId = null;
+        calcDiedUserIdByWitch = null;
     }
+    @Read
     public boolean isWitchInvalidOperation(){
         CalcContext cc = this;
         return Objects.nonNull(cc.drugKilledUserId)&&Objects.nonNull(cc.medicineSavedUserId);
     }
+    @Read
     public boolean isDoubleSaved(){
         CalcContext cc = this;
         return !isWolfEmptyKilling()
@@ -32,8 +39,35 @@ public class CalcContext {
                 &&Objects.equals(cc.protectedUserId,cc.medicineSavedUserId)
                 ;
     }
+    @Read
     public boolean isWolfEmptyKilling(){
         CalcContext cc = this;
         return Objects.isNull(cc.killingTargetUserId);
+    }
+
+    @Read
+    public boolean isTargetDied() {
+        return Objects.nonNull(calcDiedUserId);
+    }
+
+
+    public boolean isProtectSaved() {
+        return !isWolfEmptyKilling()
+                &&Objects.nonNull(protectedUserId)
+                &&Objects.equals(protectedUserId,killingTargetUserId)
+                &&!Objects.equals(medicineSavedUserId,protectedUserId)
+        ;
+    }
+
+    public boolean isWitchSaved() {
+        return !isWolfEmptyKilling()
+                &&Objects.nonNull(medicineSavedUserId)
+                &&Objects.equals(medicineSavedUserId,killingTargetUserId)
+                &&!Objects.equals(medicineSavedUserId,protectedUserId)
+                ;
+    }
+
+    public boolean isWitchKilled() {
+        return Objects.nonNull(drugKilledUserId);
     }
 }

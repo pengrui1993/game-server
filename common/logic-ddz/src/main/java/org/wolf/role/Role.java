@@ -8,7 +8,7 @@ public interface Role {
     Roles role();
     boolean alive();
     default <T extends Role> T castTo(Class<T> clazz){
-        if(this.getClass().isAssignableFrom(clazz))return clazz.cast(this);
+        if(clazz.isAssignableFrom(this.getClass()))return clazz.cast(this);
         return null;
     }
     default <T extends Role> void ifIsThen(Class<T> clazz, Consumer<T> c){

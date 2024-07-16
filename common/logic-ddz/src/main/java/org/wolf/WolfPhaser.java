@@ -1,6 +1,7 @@
 package org.wolf;
 
 import org.wolf.action.Action;
+import org.wolf.core.Final;
 import org.wolf.evt.Event;
 import org.wolf.util.ChangeStateUtil;
 
@@ -16,29 +17,31 @@ class WolfPhaser extends MajorPhaser {
     //wolfUserId to userId
     private final Map<String,String> wolfSelectResult = new HashMap<>();
     private float last;
-    private float enterPhaserTime;
     //userId
     private String result;
+    private @Final float limit;
     @Override
     public void begin() {
         firstTimes = ctx.dayNumber<1;
-        enterPhaserTime=last = 0;
         for (String s : ctx.aliveWolf()) {
             wolfSelectResult.put(s,null);
         }
         out.println("wolfs "+wolfSelectResult);
+        test = false;
+        limit = ctx.setting.wolfActionTimeoutLimit;
     }
+    boolean test;
     @Override
     public void update(float dt) {
         last+=dt;
         if(Objects.nonNull(result))return;
-        if(last-enterPhaserTime>=5){
+        if(last>=limit||test){
             out.println("wolf kill phaser timeout");
             final Runnable changer = ()-> ChangeStateUtil.change(ctx,firstTimes
                     ,()->new WitchPhaser(ctx)
                     ,()->new PredictorPhaser(ctx)
                     ,()->new ProtectorPhaser(ctx)
-                    ,()->new CalcActionPhaser(ctx)
+                    ,()->new CalcDiedPhaser(ctx)
             );
             final Collection<String> selectedId = wolfSelectResult.values().stream().filter(Objects::nonNull).toList();
             if(selectedId.isEmpty()){
@@ -85,21 +88,23 @@ class WolfPhaser extends MajorPhaser {
                         String target = params.length>=3?String.class.cast(params[2]): null;
                         wolfSelect(who,target);
                     }
+                    case TEST_DONE ->{
+                        out.println("wolf phaser test enabled");
+                        test = true;
+                    }
                 }
+
+            }
+            case MESSAGE -> {
 
             }
         }
     }
     @Override
     public void end() {
-        out.println("vote result:"+wolfSelectResult);
+        out.println("wolfs vote result:"+wolfSelectResult);
         ctx.calcCtx.clear();
         ctx.calcCtx.killingTargetUserId = result;
-        if(Objects.isNull(result)){
-            out.println("empty kill result");
-        }else{
-            out.println(result+" will be killed");
-        }
     }
 
     @Override

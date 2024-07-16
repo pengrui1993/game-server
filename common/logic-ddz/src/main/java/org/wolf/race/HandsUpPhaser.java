@@ -1,6 +1,7 @@
 package org.wolf.race;
 
 import org.wolf.action.Action;
+import org.wolf.core.Final;
 import org.wolf.evt.Event;
 
 import java.util.HashMap;
@@ -26,13 +27,17 @@ class HandsUpPhaser extends MinorPhaser {
         for (String user : users) {
             handsResult.put(user,false);
         }
-        out.println("please select up or down");
+        out.println("hands up phaser,please select up or down");
+        test = false;
+        limit = ctx.top().setting.handsUpTimeoutLimit;
     }
+    boolean test;
     float last;
+    @Final float limit;
     @Override
     public void update(float dt) {
         last+=dt;
-        if(last>=5){
+        if(last>=limit||test){
             ctx.changeState(new FirstRacingPhaser(ctx,handsResult));
         }
     }
@@ -42,28 +47,36 @@ class HandsUpPhaser extends MinorPhaser {
         for (Map.Entry<String, Boolean> e : handsResult.entrySet()) {
             out.println(e.getKey()+":"+e.getValue());
         }
-        out.println("**************");
+        out.println("hands up phaser exit**************");
     }
     @Override
     public void event(int type, Object... params) {
         Event event = Event.from(type);
         switch (event){
             case ACTION -> {
-                if(params.length<3){
-                    out.println("race choice action require(action,sender,yes/no)");
+                if(params.length<1) {
+                    out.println("hands up,require more then one params");
                     return;
                 }
                 Action a = Action.from(Integer.class.cast(params[0]));
                 switch (a){
                     case RACE_CHOICE -> {
+                        if(params.length<3){
+                            out.println("hands up,race choice action require(action,sender,true/false)");
+                            return;
+                        }
                         final String sender = String.class.cast(params[1]);
                         if(-1==ctx.top().index(sender)){
-                            out.println("invalid userId");
+                            out.println("hands up,invalid userId:"+sender);
                             return;
                         }
                         boolean yes = Boolean.parseBoolean(String.class.cast(params[2]));
-                        out.println(sender+" choose "+yes);
+                        out.println("hands up,"+sender+" choose "+yes);
                         this.handsResult.put(sender,yes);
+                    }
+                    case TEST_DONE->{
+                        out.println("hands up test enabled");
+                        test=true;
                     }
                 }
             }
