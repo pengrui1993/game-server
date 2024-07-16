@@ -15,7 +15,7 @@ public enum CardsUtil {
         return new ArrayList<>(all);
     }
     public static List<Card> allCardsWithoutStart(){
-        ArrayList<Card> arr = new ArrayList<>(allCards());
+        List<Card> arr = allCards();
         arr.remove(Card.STAR);
         return arr;
     }

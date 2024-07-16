@@ -6,7 +6,6 @@ import org.wolf.core.Final;
 import org.wolf.core.Read;
 import org.wolf.core.Write;
 import org.wolf.evt.Event;
-import org.wolf.role.Predictor;
 import org.wolf.role.Role;
 import org.wolf.role.Roles;
 import org.wolf.role.Witch;
@@ -28,13 +27,17 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
     @Final
     String master;
     private MajorPhaser cur;
-    @Final List<String> joinedUser = new ArrayList<>();
-    @Final Map<String, Role> roles=new HashMap<>();
+    @Final
+    List<String> joinedUsers = new ArrayList<>();
+    @Final
+    Map<String, Role> roles=new HashMap<>();
     boolean gameDone = false;
     int dayNumber;
     private ConnectionHandler connHandler;
     final CalcContext calcCtx = new CalcContext();
     private final Map<Roles,String> singleRolesId = new HashMap<>();
+    @Final
+    String sergeant;
     public WolfKilling(String id,String creator){
         this.id = id;
         this.creator = master =creator;
@@ -53,7 +56,7 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
     @Read
     public int index(String user){
         if(Objects.isNull(user))return -1;
-        final List<String> users = this.joinedUser;
+        final List<String> users = this.joinedUsers;
         if(users.isEmpty())return -1;
         int val = -1;
         for(int i=0;i<users.size();i++)
@@ -62,6 +65,20 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
                 break;
             }
         return val;
+    }
+    @Read
+    public String next(String user){
+        int index = index(user);
+        if(-1==index)return null;
+        return joinedUsers.get((index+1)%joinedUsers.size());
+    }
+
+    @Read
+    public String pre(String user){
+        int index = index(user);
+        if(-1==index)return null;
+        if(index==0)return joinedUsers.get(joinedUsers.size()-1);
+        return joinedUsers.get(index-1);
     }
     @Override
     public void onEvent(int cmd, Object... params) {
@@ -79,7 +96,11 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
     }
     @Write
     public void putRole(Roles r, String uid) {
-        singleRolesId.put(r,uid);
+        if(cur.getClass()== PreparingPhaser.class){
+            singleRolesId.put(r,uid);
+        }else{
+            cur.out.println("ignore put , must be preparing phaser do that");
+        }
     }
     @Read
     public String getId(Roles role){
@@ -94,6 +115,14 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
         return get(r).castTo(c);
     }
     @Read
+    public Role get(String id){
+        return roles.get(id);
+    }
+    public String get(int index){
+        if(index<0||index>=joinedUsers.size()-1)return null;
+        return joinedUsers.get(index);
+    }
+    @Read
     public List<String> aliveWolf() {
         return roles.entrySet()
                 .stream()
@@ -101,8 +130,6 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
                 .map(Map.Entry::getKey)
                 .toList();
     }
-
-
     static final Queue<Runnable> queue = new LinkedList<>();
     static final WolfKilling k = new WolfKilling(UUID.randomUUID().toString(),"user1");
     static long last;
@@ -140,7 +167,7 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
                 ,() -> k.onEvent(Event.ACTION.ordinal(), Action.START_GAME.ordinal(),"user1")
                 ,() -> {// wolf kill emulate
                     ThreadLocalRandom r = ThreadLocalRandom.current();
-                    List<String> users = k.joinedUser;
+                    List<String> users = k.joinedUsers;
                     for (String s : k.aliveWolf()) {
                         k.onEvent(Event.ACTION.ordinal(), Action.WOLF_KILL.ordinal(),s,users.get(r.nextInt(users.size())));
                     }
@@ -149,16 +176,17 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
                     if(k.cur().getClass()== WitchPhaser.class){
                         ThreadLocalRandom r = ThreadLocalRandom.current();
                         if(r.nextBoolean()){
+                            Witch witch = k.get(Roles.WITCH, Witch.class);
                             if(Objects.nonNull(k.calcCtx.killingTargetUserId)
                                     &&r.nextBoolean()
-                                    &&k.get(Roles.WITCH, Witch.class).hasMedicine()){
+                                    &&witch.hasMedicine()){
                                 k.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),k.getId(Roles.WITCH),"save");
                             }else{
-                                boolean cond = k.get(Roles.WITCH, Witch.class).hasDrug()&&r.nextBoolean();
+                                boolean cond = witch.hasDrug()&&r.nextBoolean();
                                 if(!cond)return;
-                                List<String> users = k.joinedUser;
-                                k.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal()
-                                    ,k.getId(Roles.WITCH),"kill",users.get(r.nextInt(users.size())));
+                                List<String> users = k.joinedUsers;
+                                String killed = users.get(r.nextInt(users.size()));
+                                k.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),k.getId(Roles.WITCH),"kill",killed);
                             }
                         }else{
                             k.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),k.getId(Roles.WITCH),"cancel");
@@ -184,5 +212,11 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
         }
         System.out.println(now0());
     }
-
+    public void setSergeant(String sergeant) {
+        if(cur.getClass()== RacingPhaser.class){
+            this.sergeant = sergeant;
+        }else{
+            cur.out.println("invalid set sergeant");
+        }
+    }
 }

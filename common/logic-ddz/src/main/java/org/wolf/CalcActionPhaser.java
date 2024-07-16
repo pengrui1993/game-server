@@ -23,21 +23,21 @@ class CalcActionPhaser extends MajorPhaser {
             ctx.changeState(new OverPhaser(ctx));
             return;
         }
+        if(cc.isWolfEmptyKilling()){  //no anyone died
+            out.println("wolf kill nil");
+            cc.calcDiedUserId = null;
+            ctx.changeState(new PublishDiedInfoPhaser(ctx));
+            return;
+        }
         if(cc.isDoubleSaved()){ // medicine and protected same one
             out.println(cc.protectedUserId+" died cause by save and protecte same one");
             cc.calcDiedUserId = cc.protectedUserId;
-            if(ctx.roles.get(cc.protectedUserId).role()== Roles.HUNTER){
+            if(ctx.get(cc.protectedUserId).role()== Roles.HUNTER){
                 cc.hunterAction = true;
                 out.println("killed hunter");
                 ctx.changeState(new HunterPhaser(ctx));
                 return;
             }
-            ctx.changeState(new PublishDiedInfoPhaser(ctx));
-            return;
-        }
-        if(cc.isWolfEmptyKilling()){  //no anyone died
-            out.println("wolf kill nil");
-            cc.calcDiedUserId = null;
             ctx.changeState(new PublishDiedInfoPhaser(ctx));
             return;
         }

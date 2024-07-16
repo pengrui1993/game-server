@@ -361,6 +361,7 @@ public class FightTheLandlord {
             }
         }
     }
+    static final Queue<Runnable> queue = new LinkedList<>();
     public static void main(String[] args) {
         FightTheLandlord lord = new FightTheLandlord();
         lord.onCreate();
@@ -375,7 +376,7 @@ public class FightTheLandlord {
             ,()->lord.onAction(Action.PUT.ordinal(),"ww","34567")
         )
       ;
-        Queue<Runnable> queue = new LinkedList<>(ls);
+        queue.addAll(ls);
         Input input = new Input(lord, queue);
         while(!lord.isDone()){
             final long tmp = now();

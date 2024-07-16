@@ -80,7 +80,7 @@ class PreparingPhaser extends MajorPhaser {
         }
         ctx.dayNumber = 0;
         ctx.roles = Collections.unmodifiableMap(roles);
-        ctx.joinedUser = Collections.unmodifiableList(joinedUser);
+        ctx.joinedUsers = Collections.unmodifiableList(joinedUser);
         out.println("game start ok, show all players role: ******************");
         for (Map.Entry<String, Role> e : roles.entrySet()) {
             System.out.println(e.getKey()+":"+e.getValue().role());

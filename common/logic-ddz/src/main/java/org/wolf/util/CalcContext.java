@@ -26,8 +26,11 @@ public class CalcContext {
     }
     public boolean isDoubleSaved(){
         CalcContext cc = this;
-        return Objects.equals(cc.protectedUserId,cc.medicineSavedUserId)
-                && Objects.nonNull(cc.protectedUserId);
+        return !isWolfEmptyKilling()
+                &&Objects.nonNull(cc.protectedUserId)
+                &&Objects.equals(cc.protectedUserId,cc.killingTargetUserId)
+                &&Objects.equals(cc.protectedUserId,cc.medicineSavedUserId)
+                ;
     }
     public boolean isWolfEmptyKilling(){
         CalcContext cc = this;

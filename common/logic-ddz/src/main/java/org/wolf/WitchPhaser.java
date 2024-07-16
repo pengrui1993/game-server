@@ -76,7 +76,7 @@ class WitchPhaser extends MajorPhaser {
                     out.println("invalid target of killing with witch ,target:"+target);
                     return;
                 }
-                if(!ctx.roles.get(target).alive()){
+                if(!ctx.get(target).alive()){
                     out.println("target already died");
                     return;
                 }
