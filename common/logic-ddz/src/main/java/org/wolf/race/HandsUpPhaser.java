@@ -43,10 +43,8 @@ class HandsUpPhaser extends MinorPhaser {
     }
     @Override
     public void end() {
-        out.println("race hands action result************");
-        for (Map.Entry<String, Boolean> e : handsResult.entrySet()) {
-            out.println(e.getKey()+":"+e.getValue());
-        }
+        out.println("race hands action detail************");
+        out.println(handsResult);
         out.println("hands up phaser exit**************");
     }
     @Override

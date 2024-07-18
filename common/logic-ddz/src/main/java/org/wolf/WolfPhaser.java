@@ -3,7 +3,8 @@ package org.wolf;
 import org.wolf.action.Action;
 import org.wolf.core.Final;
 import org.wolf.evt.Event;
-import org.wolf.util.ChangeStateUtil;
+import org.wolf.role.Roles;
+import org.wolf.role.Witch;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,30 +27,38 @@ class WolfPhaser extends MajorPhaser {
         for (String s : ctx.aliveWolf()) {
             wolfSelectResult.put(s,null);
         }
-        out.println("wolfs "+wolfSelectResult);
+        out.println("wolf phaser begin,wolfs "+wolfSelectResult);
         test = false;
         limit = ctx.setting.wolfActionTimeoutLimit;
     }
     boolean test;
-    @Override
-    public void update(float dt) {
-        last+=dt;
-        if(Objects.nonNull(result))return;
-        if(last>=limit||test){
-            out.println("wolf kill phaser timeout");
-            final Runnable changer = ()-> ChangeStateUtil.change(ctx,firstTimes
-                    ,()->new WitchPhaser(ctx)
-                    ,()->new PredictorPhaser(ctx)
-                    ,()->new ProtectorPhaser(ctx)
-                    ,()->new CalcDiedPhaser(ctx)
-            );
-            final Collection<String> selectedId = wolfSelectResult.values().stream().filter(Objects::nonNull).toList();
-            if(selectedId.isEmpty()){
-                changer.run();
+    private void change(){
+        final Runnable changer = ()-> {
+            if(firstTimes){
+                ctx.changeState(new WitchPhaser(ctx));
                 return;
             }
-            // Map<String, List<String>> collect = selectedId.stream().collect(Collectors.groupingBy(s -> s));
-            selectedId.stream()
+            final Witch w = ctx.get(Roles.WITCH, Witch.class);
+            boolean witchCanAction = w.alive()&&w.hasAnyMedicine();
+            boolean predictorCanAction = ctx.get(Roles.PREDICTOR).alive();;
+            boolean protectorCanAction = ctx.get(Roles.PROTECTOR).alive();
+            if(predictorCanAction){
+                ctx.changeState(new PredictorPhaser(ctx));
+            }else if(witchCanAction){
+                ctx.changeState(new WitchPhaser(ctx));
+            }else if(protectorCanAction){
+                ctx.changeState(new ProtectorPhaser(ctx));
+            }else{
+                ctx.changeState(new CalcDiedPhaser(ctx));
+            }
+        };
+        final Collection<String> selectedId = wolfSelectResult.values().stream().filter(Objects::nonNull).toList();
+        if(selectedId.isEmpty()){
+            changer.run();
+            return;
+        }
+        // Map<String, List<String>> collect = selectedId.stream().collect(Collectors.groupingBy(s -> s));
+        selectedId.stream()
                 .collect(Collectors.groupingBy(s -> s))
                 .entrySet()
                 .stream()
@@ -57,10 +66,16 @@ class WolfPhaser extends MajorPhaser {
                 .max(Comparator.comparingInt(Map.Entry::getValue))
                 .ifPresent(v->{
                     String whoBeKilled = result = v.getKey();
-                    int count = v.getValue();
-                    out.printf("%s got %s,be killed\n",whoBeKilled,count);
+                    out.printf("%s got %s,be killed\n",whoBeKilled,v.getValue());
                     changer.run();
                 });
+    }
+    @Override
+    public void update(float dt) {
+        last+=dt;
+        if(Objects.nonNull(result))return;
+        if(last>=limit||test){
+           change();
         }
     }
     void wolfSelect(String wolf,String target){

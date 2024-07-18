@@ -16,4 +16,7 @@ public interface Role {
         if(Objects.isNull(c))return;
         Optional.ofNullable(castTo(clazz)).ifPresent(c);
     }
+    default String info(){
+        return role().name();
+    }
 }

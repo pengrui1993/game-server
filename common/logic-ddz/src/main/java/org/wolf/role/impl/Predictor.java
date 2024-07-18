@@ -17,4 +17,8 @@ public class Predictor implements org.wolf.role.Predictor {
     }
     private boolean lived;
     public final Map<String,Boolean> verifies = new HashMap<>();
+    @Override
+    public String toString() {
+        return info();
+    }
 }

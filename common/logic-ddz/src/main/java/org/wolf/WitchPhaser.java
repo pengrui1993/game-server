@@ -4,7 +4,7 @@ import org.wolf.action.Action;
 import org.wolf.core.Final;
 import org.wolf.evt.Event;
 import org.wolf.role.Roles;
-import org.wolf.role.Witch;
+import org.wolf.role.impl.Witch;
 
 import java.util.Objects;
 
@@ -41,8 +41,8 @@ class WitchPhaser extends MajorPhaser {
             out.println("witch kill action mission action sender");
             return;
         }
-        String who = String.class.cast(params[1]);
-        if(!Objects.equals(witchId,who)){
+        String sender = String.class.cast(params[1]);
+        if(!Objects.equals(witchId,sender)){
             out.println("cannot match witch user id");
             return;
         }
@@ -51,19 +51,22 @@ class WitchPhaser extends MajorPhaser {
                 ctx.changeState(new PredictorPhaser(ctx));
                 return;
             }
-            boolean protectorCanAction = ctx.get(Roles.PROTECTOR).alive();
-            if(protectorCanAction){
+            if(ctx.get(Roles.PROTECTOR).alive()){
                 ctx.changeState(new ProtectorPhaser(ctx));
-            }else{
-                ctx.changeState(new CalcDiedPhaser(ctx));
+                return;
             }
+            ctx.changeState(new CalcDiedPhaser(ctx));
         };
         String action = String.class.cast(params[2]);
         switch (action){
             case "save"->{
-                if(state!=State.SAVING)return;
+                if(state!=State.SAVING){
+                    out.println("witch,state is not saving ,cannot do save");
+                    return;
+                }
                 out.println("on witch save");
                 ctx.calcCtx.medicineSavedUserId = ctx.calcCtx.killingTargetUserId;
+                witch.medicine = false;
                 change.run();
             }
             case "kill"->{
@@ -82,6 +85,7 @@ class WitchPhaser extends MajorPhaser {
                 }
                 out.println("on witch kill");
                 ctx.calcCtx.drugKilledUserId = target;
+                witch.drug = false;
                 change.run();
             }
             case "cancel"-> {
@@ -90,9 +94,9 @@ class WitchPhaser extends MajorPhaser {
                     ctx.calcCtx.medicineSavedUserId = null;
                     if(witch.hasDrug())state = State.KILLING;
                     else change.run();
-                }else{
-                    change.run();
+                    return;
                 }
+                change.run();
             }
             default -> out.println("unknown action in witch phaser:"+action);
         }

@@ -20,4 +20,8 @@ public class Hunter implements org.wolf.role.Hunter {
     public boolean killed() {
         return Objects.nonNull(killedUserId);
     }
+    @Override
+    public String toString() {
+        return info();
+    }
 }

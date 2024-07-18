@@ -3,6 +3,8 @@ package org.wolf;
 import org.wolf.action.Action;
 import org.wolf.core.Final;
 import org.wolf.evt.Event;
+import org.wolf.util.TalkingRoom;
+import org.wolf.util.TalkingRoomManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,12 +23,13 @@ class TalkingPhaser extends MajorPhaser {
     private @Final String startUser;
     @Final String sergeant;
     float last,curLast;
+    @Final float limit;
+    boolean test;
+    private final List<String> aliveUser = new ArrayList<>();
+    private @Final TalkingRoom room;
     TalkingPhaser(WolfKilling ctx) {
         this.ctx = ctx;
     }
-    final List<String> aliveUser = new ArrayList<>();
-    @Final float limit;
-    boolean test;
     @Override
     public void begin() {
         sergeant = ctx.sergeant;
@@ -42,11 +45,14 @@ class TalkingPhaser extends MajorPhaser {
         limit = ctx.setting.talkingLimit;
         test = false;
         ctx.curDayTalkingTimes++;
+        room = TalkingRoomManager.MGR.create(ctx.joinedUsers);
+        room.active(curUser);
+        out.println("talking,room created:"+room);
         out.println("talking phaser begin , ordering ccw:"+this.orderingCCW);
     }
-
     @Override
     public void end() {
+        room.close();
         out.println("talking phaser end");
     }
 
@@ -74,6 +80,7 @@ class TalkingPhaser extends MajorPhaser {
                     case TEST_DONE -> {
                         out.println("talking phaser,test enabled");
                         test = true;
+                        while(!Objects.equals(curUser,startUser))next();
                     }
                 }
             }
@@ -107,5 +114,6 @@ class TalkingPhaser extends MajorPhaser {
         }
         curLast = 0;
         curUser = s;
+        room.active(curUser);
     }
 }

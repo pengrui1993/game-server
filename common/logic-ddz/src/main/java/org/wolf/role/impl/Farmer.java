@@ -14,4 +14,8 @@ public class Farmer implements org.wolf.role.Farmer {
     }
     private boolean lived;
 
+    @Override
+    public String toString() {
+        return info();
+    }
 }

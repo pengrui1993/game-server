@@ -14,4 +14,8 @@ public class Protector implements org.wolf.role.Protector {
     public boolean alive() {
         return lived;
     }
+    @Override
+    public String toString() {
+        return info();
+    }
 }

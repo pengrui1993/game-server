@@ -25,4 +25,8 @@ public class Witch implements org.wolf.role.Witch {
     public boolean hasMedicine() {
         return medicine;
     }
+    @Override
+    public String toString() {
+        return info();
+    }
 }

@@ -5,6 +5,7 @@ import org.wolf.core.Final;
 import org.wolf.evt.Event;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 class VotingPhaser extends MajorPhaser {
@@ -21,6 +22,12 @@ class VotingPhaser extends MajorPhaser {
     float limit;
     final Map<String,String> livedVote = new HashMap<>();
     @Final boolean talkingAgain;
+
+    @Override
+    public void end() {
+        out.println("voting,voted:"+votedUserId);
+    }
+
     @Override
     public void begin() {
         test = false;
@@ -29,13 +36,16 @@ class VotingPhaser extends MajorPhaser {
         ctx.lived().forEach(u->livedVote.put(u,null));
         talkingAgain = ctx.curDayTalkingTimes==1;
     }
+    List<String> abandon;
+    Map<String, List<String>> voteResult;
+    String votedUserId;
 
     private void calcVoting(){
-        List<String> abandon = livedVote.entrySet()
+        abandon = livedVote.entrySet()
                 .stream()
                 .filter(e -> Objects.isNull(e.getValue()))
                 .map(Map.Entry::getKey).toList();
-        Map<String, List<String>> collect = livedVote.entrySet()
+        Map<String, List<String>> collect = voteResult=livedVote.entrySet()
                 .stream()
                 .filter(e -> Objects.nonNull(e.getValue()))
                 .map(f -> Map.entry(f.getValue(), f.getKey()))
@@ -44,24 +54,39 @@ class VotingPhaser extends MajorPhaser {
                 .stream()
                 .map(e -> Map.entry(e.getKey(), e.getValue().stream().map(Map.Entry::getValue).toList()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        out.println("voting,detail:"+collect);
         ArrayList<Map.Entry<String, List<String>>> entries = new ArrayList<>(collect.entrySet());
         entries.sort(Comparator.comparingInt(o -> o.getValue().size()));
-        if(entries.isEmpty()){
-
-        }else if(entries.size()==1){
-
-        }else{
-            String diedUserId = null;
-            if(talkingAgain){
-                ctx.changeState(new TalkingPhaser(ctx));
-            }else{
-                ctx.changeState(new LastWordsPhaser(ctx,diedUserId,()->{
-
-                }));
-                ctx.curDayTalkingTimes = 0;
+        Consumer<String> lastWords = (uid)->{
+            votedUserId = uid;
+            ctx.changeState(new LastWordsPhaser(ctx,uid,()-> ctx.changeState(new WolfPhaser(ctx))));
+            ctx.curDayTalkingTimes = 0;
+        };
+        Runnable noOneDied = ()->{
+            ctx.changeState(new WolfPhaser(ctx));
+            ctx.curDayTalkingTimes = 0;
+        };
+        switch (entries.size()){
+            case 0->{
+                if(talkingAgain){
+                    ctx.changeState(new TalkingPhaser(ctx));
+                    return;
+                }
+                noOneDied.run();
+            }
+            case 1-> lastWords.accept(entries.get(0).getKey());
+            default->{
+                final Map.Entry<String, List<String>> top = entries.get(entries.size() - 1);
+                boolean sameVotedResult = top.getValue().size()==entries.get(entries.size()-2).getValue().size();
+                if(sameVotedResult&&talkingAgain){
+                    ctx.changeState(new TalkingPhaser(ctx));
+                }else if(sameVotedResult){
+                    noOneDied.run();
+                }else{
+                    lastWords.accept(top.getKey());
+                }
             }
         }
-
     }
     @Override
     public void update(float dt) {
@@ -85,7 +110,27 @@ class VotingPhaser extends MajorPhaser {
                         test = true;
                         out.println("voting test enabled");
                     }
-                    case VOTING_VOTE -> {}
+                    case VOTING_VOTE -> {
+                        if(params.length<3){
+                            out.println("voting,require 1 params ");
+                            return;
+                        }
+                        String sender = String.class.cast(params[1]);
+                        if(!livedVote.containsKey(sender)){
+                            out.println("voting,not allow to voting");
+                            return;
+                        }
+                        if(Objects.nonNull(livedVote.get(sender))){
+                            out.println("voting,already voted");
+                            return;
+                        }
+                        String target = String.class.cast(params[2]);
+                        if(!livedVote.containsKey(target)){
+                            out.println("voting,invalid voted");
+                            return;
+                        }
+                        livedVote.put(sender,target);
+                    }
                 }
             }
         }

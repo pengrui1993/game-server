@@ -13,4 +13,8 @@ public class Wolf implements org.wolf.role.Wolf {
     public boolean alive() {
         return lived;
     }
+    @Override
+    public String toString() {
+        return info();
+    }
 }

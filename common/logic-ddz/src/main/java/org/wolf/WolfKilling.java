@@ -148,8 +148,8 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
     static long last;
     static final long start = last = now0();
     static void loop(){
-        if (now0() - start >= 3000) {
-            if(WolfPhaser.class==k.cur().getClass()){
+        if (now0() - start >= 1000) {
+            if(WolfPhaser.class==k.cur().getClass()){//blocked phaser
                 queue.offer(WolfKilling::loop);
                 return;
             }
@@ -235,10 +235,25 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
                 ,()-> k.onEvent(Event.ACTION.ordinal(),Action.RACE_VOTE.ordinal(),"user2","user1")
                 ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//race.VotingPhaser
                 ,()->{}//noop for race.done
-                ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//PublishDiedInfoPhaser
-                ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//LastWordsPhaser
-                ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//OrderingPhaser
-                ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//TalkingPhaser
+                ,()-> {if(k.cur.getClass()==PublishDiedInfoPhaser.class)
+                    k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//PublishDiedInfoPhaser
+                ,()-> {if(k.cur.getClass()==LastWordsPhaser.class)
+                    k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//LastWordsPhaser
+                ,()-> {if(k.cur.getClass()==OrderingPhaser.class)
+                    k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//OrderingPhaser
+                ,()-> {if(k.cur.getClass()==TalkingPhaser.class)
+                    k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//TalkingPhaser
+                ,()-> {if(k.cur.getClass()==VotingPhaser.class)
+                    k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//VotingPhaser
+                ,()-> {if(k.cur.getClass()==TalkingPhaser.class)
+                    k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//TalkingPhaser
+                ,()->{}
+                ,()-> {if(k.cur.getClass()== VotingPhaser.class)
+                        k.onEvent(Event.ACTION.ordinal(),Action.VOTING_VOTE.ordinal(),"user1","user2");}
+                ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//VotingPhaser
+                ,()-> {if(k.cur.getClass()== LastWordsPhaser.class)
+                    k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//LastWordsPhaser
+
 
                 ,WolfKilling::loop
         );
