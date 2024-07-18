@@ -2,7 +2,7 @@ package org.wolf.action;
 
 public enum Action {
     UNKNOWN
-    , TEST_DONE//for test
+    ,TEST_DONE//for test
     ,JOIN
     ,LEFT
     ,START_GAME
@@ -16,6 +16,7 @@ public enum Action {
     ,ORDERING_DECISION
     ,TALKING_NEXT
     ,HUNTER_ACTION
+    ,PROTECTOR_ACTION
     ,VOTING_VOTE
     ;
 

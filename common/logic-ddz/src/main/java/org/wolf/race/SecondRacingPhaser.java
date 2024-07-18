@@ -35,7 +35,7 @@ class SecondRacingPhaser extends MinorPhaser{
         last+=dt;
         curLast+=dt;
         if(curLast>timeLimit||test){
-            next();
+            ctx.changeState(new VotingPhaser(ctx,raceUp,raceDown));
         }
     }
     private void next(){

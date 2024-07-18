@@ -8,14 +8,18 @@ import org.wolf.role.Roles;
 import org.wolf.role.impl.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 class PreparingPhaser extends MajorPhaser {
     final List<String> joined = new ArrayList<>();
     static final int LIMIT_PLAYER = 12;
     @Final
     String master;
-    boolean prepared;
+    boolean test;
     float last;
+    float limit;
+    private @Final List<Roles> roles;
+    final Map<String,Roles> userTarget = new HashMap<>();
     @Override
     public Major state() {
         return Major.PREPARING;
@@ -24,22 +28,34 @@ class PreparingPhaser extends MajorPhaser {
     PreparingPhaser(WolfKilling ctx) {
         this.ctx = ctx;
     }
+    void change(){
+        ctx.changeState(new WolfPhaser(ctx));
+    }
     @Override
     public void update(float dt) {
         last+=dt;
-        if(prepared)ctx.changeState(new WolfPhaser(ctx));
-    }
-    @Override
-    public void begin() {
-        master = ctx.master;
-        prepared = false;
-        last = 0;
+        if(last>limit){
+            randomRemainRoles();
+            change();
+        }else if(test){
+            defaultRole();
+            change();
+        }
     }
     @Override
     public void end() {
-        final Map<String, Role> roles = new HashMap<>();
-        final List<String> joinedUser = new ArrayList<>();
-        List<Roles> list = new ArrayList<>(List.of(
+        out.println("preparing done,show all players role: ******************");
+        out.println(ctx.roles);
+        out.println("preparing,******************");
+    }
+
+    @Override
+    public void begin() {
+        master = ctx.master;
+        test = false;
+        last = 0;
+        limit = ctx.setting.preparingActionTimeoutLimit;
+        roles = new ArrayList<>(List.of(
                 Roles.HUNTER
                 ,Roles.PREDICTOR
                 ,Roles.PROTECTOR
@@ -53,49 +69,109 @@ class PreparingPhaser extends MajorPhaser {
                 ,Roles.FARMER
                 ,Roles.FARMER
         ));
-        Collections.shuffle(list);
-        for (String uid : joined) {
-            joinedUser.add(uid);
-            Roles r;
-            switch (r=list.remove(0)){
-                case WITCH -> {
-                    roles.put(uid,new Witch(ctx));
-                    ctx.putRole(r,uid);
+    }
+
+    void randomRemainRoles(){
+        if(userTarget.isEmpty()){
+            defaultRole();
+            return;
+        }
+        final List<String> joinedUser = new ArrayList<>(joined);
+        final Map<String, Role> roles = new HashMap<>();
+        final Map<String,Roles> rolesEnum = new HashMap<>();
+        final List<Roles> consumed = new ArrayList<>();
+        List<Roles> list = this.roles;
+        Map<Roles, List<String>> roleUsers = userTarget.entrySet()
+                .stream()
+                .collect(Collectors.groupingBy(Map.Entry::getValue))
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, v -> v.getValue()
+                        .stream()
+                        .map(Map.Entry::getKey)
+                        .toList()));
+
+        roleUsers.forEach((key, value) -> {
+            switch (key) {
+                case NONE -> out.println("invalid foreach in preparing");
+                case WOLF,FARMER ->{
+                    int min = Math.min(value.size(),4);
+                    for(int i=0;i<min;i++){
+                        consumed.add(key);
+                        final String uid = value.get(i);
+                        rolesEnum.put(uid,key);
+                        switch (key){
+                            case WOLF -> roles.put(uid,new Wolf(ctx));
+                            case FARMER -> roles.put(uid,new Farmer(ctx));
+                        }
+                    }
                 }
-                case HUNTER -> {
-                    roles.put(uid,new Hunter(ctx));
-                    ctx.putRole(r,uid);
+                default -> {
+                    if(value.isEmpty())return;
+                    final String uid = value.get(0);
+                    rolesEnum.put(uid,key);
+                    consumed.add(key);
+                    switch (key){
+                        case WITCH -> roles.put(uid,new Witch(ctx));
+                        case PREDICTOR -> roles.put(uid,new Predictor(ctx));
+                        case PROTECTOR -> roles.put(uid,new Protector(ctx));
+                        case HUNTER -> roles.put(uid,new Hunter(ctx));
+                    }
+                    ctx.putRole(key,uid);
                 }
-                case PREDICTOR -> {
-                    roles.put(uid,new Predictor(ctx));
-                    ctx.putRole(r,uid);
-                }
-                case PROTECTOR -> {
-                    roles.put(uid,new Protector(ctx));
-                    ctx.putRole(r,uid);
-                }
+            }
+        });
+        list.removeAll(consumed);
+        joinedUser.removeAll(rolesEnum.keySet());
+        joinedUser.forEach(uid->{
+            Roles key;
+            switch (key=list.remove(0)){
+                case WITCH -> roles.put(uid,new Witch(ctx));
+                case PREDICTOR -> roles.put(uid,new Predictor(ctx));
+                case PROTECTOR -> roles.put(uid,new Protector(ctx));
+                case HUNTER -> roles.put(uid,new Hunter(ctx));
                 case WOLF -> roles.put(uid,new Wolf(ctx));
                 case FARMER -> roles.put(uid,new Farmer(ctx));
             }
+            rolesEnum.put(uid,key);
+            if(!(key==Roles.WOLF||key==Roles.FARMER))ctx.putRole(key,uid);
+        });
+        ctx.dayNumber = 0;
+        ctx.roles = Collections.unmodifiableMap(roles);
+        ctx.joinedUsers = List.copyOf(joined);
+        out.println("preparing,user->role "+rolesEnum);
+    }
+    void defaultRole(){
+        final Map<String, Role> roles = new HashMap<>();
+        List<Roles> list = this.roles;
+        Collections.shuffle(list);
+        for (String uid : joined) {
+            Roles key;
+            switch (key=list.remove(0)){
+                case WITCH -> roles.put(uid,new Witch(ctx));
+                case HUNTER -> roles.put(uid,new Hunter(ctx));
+                case PREDICTOR -> roles.put(uid,new Predictor(ctx));
+                case PROTECTOR -> roles.put(uid,new Protector(ctx));
+                case WOLF -> roles.put(uid,new Wolf(ctx));
+                case FARMER -> roles.put(uid,new Farmer(ctx));
+            }
+            if(!(key==Roles.WOLF||key==Roles.FARMER))ctx.putRole(key,uid);
         }
         ctx.dayNumber = 0;
         ctx.roles = Collections.unmodifiableMap(roles);
-        ctx.joinedUsers = Collections.unmodifiableList(joinedUser);
-        out.println("preparing done,show all players role: ******************");
-        out.println(roles);
-        out.println("preparing,******************");
+        ctx.joinedUsers = List.copyOf(joined);
     }
 
     protected void onStart(String who){
-        if(Objects.equals(who,master)){
-            if(joined.size()==LIMIT_PLAYER){
-                ctx.changeState(new WolfPhaser(ctx));
-            }else{
-                out.println("must have 12 player to start the game");
-            }
-        }else{
+        if(!Objects.equals(who,master)){
             out.println("sender is not master,sender:"+who);
+            return;
         }
+        if(joined.size()!=LIMIT_PLAYER){
+            out.println("must have 12 player to start the game");
+            return;
+        }
+        change();
     }
 
     protected void onJoin(String who){
@@ -115,21 +191,19 @@ class PreparingPhaser extends MajorPhaser {
     }
     @Override
     public void event(int type, Object... params) {
-        Event e = Event.from(type);
-        if(params.length<1)return;
-        switch (e){
+        switch (Event.from(type)){
+            case NULL -> {}
             case ACTION -> {
-                Action a = Action.from(Integer.class.cast(params[0]));
-                if(params.length<2) {out.println("mission sender in "+a); return;}
+                if(params.length<2) {
+                    out.println("preparing action,required 2 params");
+                    return;
+                }
                 String who = String.class.cast(params[1]);
-                switch (a){
+                switch (Action.from(Integer.class.cast(params[0]))){
                     case JOIN -> onJoin(who);
                     case LEFT -> onLeft(who);
                     case START_GAME -> onStart(who);
                 }
-            }
-            case MESSAGE -> {
-
             }
         }
     }

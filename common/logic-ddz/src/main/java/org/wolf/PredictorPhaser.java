@@ -2,6 +2,7 @@ package org.wolf;
 
 import org.wolf.action.Action;
 import org.wolf.core.Final;
+import org.wolf.core.Once;
 import org.wolf.evt.Event;
 import org.wolf.role.Predictor;
 import org.wolf.role.Roles;
@@ -19,7 +20,8 @@ class PredictorPhaser extends MajorPhaser {
     PredictorPhaser(WolfKilling ctx) {
         this.ctx = ctx;
     }
-    //userId wolf , yes or no
+
+    @Once  //userId wolf , yes or no
     Map.Entry<String,Boolean> verify;
     @Final
     boolean firstTimes;
@@ -27,6 +29,8 @@ class PredictorPhaser extends MajorPhaser {
     String predictorUserId;
     @Final
     Predictor predictor;
+    float last;
+    float limit;
     @Override
     public void begin() {
         firstTimes = ctx.dayNumber<1;
@@ -39,29 +43,25 @@ class PredictorPhaser extends MajorPhaser {
     public void end() {
         out.println("predictor phaser exit,result:"+verify);
     }
-    float last;
-    float limit;
     @Override
     public void update(float dt) {
         Runnable change = ()->{
             if(firstTimes){
                 ctx.changeState(new RacingPhaser(ctx));
+                return;
+            }
+            Witch witch = ctx.get(Roles.WITCH).castTo(Witch.class);
+            if(witch.alive()&&witch.hasAnyMedicine()){
+                ctx.changeState(new WitchPhaser(ctx));
+            }else if(ctx.get(Roles.PROTECTOR).alive()){
+                ctx.changeState(new ProtectorPhaser(ctx));
             }else{
-                Witch witch = ctx.get(Roles.WITCH).castTo(Witch.class);
-                if(witch.alive()&&witch.hasAnyMedicine()){
-                    ctx.changeState(new WitchPhaser(ctx));
-                }else if(ctx.get(Roles.PROTECTOR).alive()){
-                    ctx.changeState(new ProtectorPhaser(ctx));
-                }else{
-                    ctx.changeState(new CalcDiedPhaser(ctx));
-                }
+                ctx.changeState(new CalcDiedPhaser(ctx));
             }
         };
         last+=dt;
-        if(last>=limit){
-            change.run();
-        }
-        if(Objects.nonNull(verify)){
+        if(Objects.nonNull(verify)
+                ||last>=limit){
             change.run();
         }
     }

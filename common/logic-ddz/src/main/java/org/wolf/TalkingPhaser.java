@@ -40,7 +40,8 @@ class TalkingPhaser extends MajorPhaser {
                 .map(Map.Entry::getKey)
                 .toList();
         ctx.joinedUsers.forEach(e->{if(living.contains(e))aliveUser.add(e);});
-        startUser = curUser = aliveUser.get(ThreadLocalRandom.current().nextInt(aliveUser.size()));
+        final ThreadLocalRandom r = ThreadLocalRandom.current();
+        startUser = curUser = aliveUser.get(r.nextInt(aliveUser.size()));
         this.orderingCCW = ctx.talkingOrderingCCW;
         limit = ctx.setting.talkingLimit;
         test = false;
@@ -48,7 +49,8 @@ class TalkingPhaser extends MajorPhaser {
         room = TalkingRoomManager.MGR.create(ctx.joinedUsers);
         room.active(curUser);
         out.println("talking,room created:"+room);
-        out.println("talking phaser begin , ordering ccw:"+this.orderingCCW);
+        out.println("talking phaser begin , ordering ccw:"+this.orderingCCW
+                +",current speaking user:"+curUser);
     }
     @Override
     public void end() {
@@ -94,7 +96,8 @@ class TalkingPhaser extends MajorPhaser {
         last+=dt;
         curLast+=dt;
         if(curLast>=limit||test){
-            next();
+//            while(!Objects.equals(curUser,startUser))next();
+            ctx.changeState(new VotingPhaser(ctx));
         }
     }
     private int index(String uid){
@@ -115,5 +118,6 @@ class TalkingPhaser extends MajorPhaser {
         curLast = 0;
         curUser = s;
         room.active(curUser);
+        out.println("talking,current speaking user:"+curUser);
     }
 }

@@ -32,6 +32,7 @@ class PublishDiedInfoPhaser extends MajorPhaser{
     @Override
     public void end() {
         final CalcContext cc = ctx.calcCtx;
+        ctx.dayNumber++;
         out.println("publish,"+cc.calcDiedUserId+","+cc.calcDiedUserIdByWitch);
     }
     private void change(){

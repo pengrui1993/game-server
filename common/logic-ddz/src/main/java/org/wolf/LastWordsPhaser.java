@@ -24,11 +24,13 @@ class LastWordsPhaser extends MajorPhaser{
         diedUserId = whoDied;
     }
     float last;
+    float limit;
     boolean changed;
     boolean test;
     @Override
     public void begin() {
         last = 0;
+        limit = ctx.setting.lastWordsActionTimeoutLimit;
         first = ctx.dayNumber<1;
         changed = false;
         test = false;
@@ -38,7 +40,7 @@ class LastWordsPhaser extends MajorPhaser{
     @Override
     public void update(float dt) {
         last+=dt;
-        if((last>5&&!changed)||test){
+        if((last>=limit&&!changed)||test){
             change.run();
             changed = true;
         }

@@ -13,10 +13,15 @@ class CalcDiedPhaser extends MajorPhaser {
     CalcDiedPhaser(WolfKilling ctx) {
         this.ctx = ctx;
     }
-
+    boolean calcDone;
     @Override
-    public void begin() {
-        out.println("calc died,begin");
+    public void update(float dt) {
+        if(!calcDone){
+            handle();
+            calcDone = true;
+        }
+    }
+    void handle(){
         final CalcContext cc = ctx.calcCtx;
         if(cc.isWitchInvalidOperation()){
             out.println("invalid witch action both of saved and killed");
@@ -62,6 +67,11 @@ class CalcDiedPhaser extends MajorPhaser {
             cc.calcDiedUserIdByWitch = null;
         }
         ctx.changeState(new PublishDiedInfoPhaser(ctx));
+    }
+    @Override
+    public void begin() {
+        out.println("calc died,begin");
+        calcDone = false;
     }
     @Override
     public void end() {
