@@ -271,6 +271,7 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
             //sleep
             sleep0(10);
         }
+        k.onDestroy();
         System.out.println(now0());
     }
     public void setSergeant(String sergeant) {

@@ -91,6 +91,115 @@
         <artifactId>amqp-client</artifactId>
         <version>5.21.0</version>
       </dependency>
+      <!-- https://mvnrepository.com/artifact/commons-codec/commons-codec -->
+      <dependency>
+        <groupId>commons-codec</groupId>
+        <artifactId>commons-codec</artifactId>
+        <version>1.17.0</version>
+      </dependency>
+      <!-- https://mvnrepository.com/artifact/com.google.zxing/javase -->
+      <dependency>
+        <groupId>com.google.zxing</groupId>
+        <artifactId>javase</artifactId>
+        <version>3.5.2</version>
+      </dependency>
+      <!-- https://mvnrepository.com/artifact/org.jfree/jfreesvg -->
+      <dependency>
+        <groupId>org.jfree</groupId>
+        <artifactId>jfreesvg</artifactId>
+        <version>3.4.3</version>
+      </dependency>
+        <dependency>
+            <groupId>ws.schild</groupId>
+            <artifactId>jave-core</artifactId>
+            <version>3.5.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/ws.schild/jave-nativebin-osxm1 -->
+        <dependency>
+            <groupId>ws.schild</groupId>
+            <artifactId>jave-nativebin-osxm1</artifactId>
+            <version>3.5.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/ws.schild/jave-all-deps
+        <dependency>
+            <groupId>ws.schild</groupId>
+            <artifactId>jave-all-deps</artifactId>
+            <version>3.5.0</version>
+        </dependency>
+        -->
+        <!-- 搜索相关 -->
+        <!-- https://mvnrepository.com/artifact/com.jianggujin/IKAnalyzer-lucene-->
+        <dependency>
+            <groupId>com.jianggujin</groupId>
+            <artifactId>IKAnalyzer-lucene</artifactId>
+            <version>8.0.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-analyzers-common -->
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analyzers-common</artifactId>
+            <version>8.11.2</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-core -->
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-core</artifactId>
+            <version>9.3.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-queryparser -->
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-queryparser</artifactId>
+            <version>9.3.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/cn.hutool/hutool-all -->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>5.8.29</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/net.coobird/thumbnailator -->
+        <dependency>
+            <groupId>net.coobird</groupId>
+            <artifactId>thumbnailator</artifactId>
+            <version>0.4.20</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.github.binarywang/weixin-java-pay 微信支付 Java SDK -->
+        <dependency>
+            <groupId>com.github.binarywang</groupId>
+            <artifactId>weixin-java-pay</artifactId>
+            <version>4.6.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.github.binarywang/weixin-java-open 微信开放平台 Java SDK -->
+        <dependency>
+            <groupId>com.github.binarywang</groupId>
+            <artifactId>weixin-java-open</artifactId>
+            <version>4.6.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.github.binarywang/weixin-java-mp 微信公众号Java SDK -->
+        <dependency>
+            <groupId>com.github.binarywang</groupId>
+            <artifactId>weixin-java-mp</artifactId>
+            <version>4.6.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.github.binarywang/weixin-java-miniapp 微信小程序 Java SDK -->
+        <dependency>
+            <groupId>com.github.binarywang</groupId>
+            <artifactId>weixin-java-miniapp</artifactId>
+            <version>4.6.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.github.binarywang/weixin-java-channel 微信视频号 Java SDK -->
+        <dependency>
+            <groupId>com.github.binarywang</groupId>
+            <artifactId>weixin-java-channel</artifactId>
+            <version>4.6.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.github.binarywang/weixin-java-cp 微信企业号/企业微信 Java SDK -->
+        <dependency>
+            <groupId>com.github.binarywang</groupId>
+            <artifactId>weixin-java-cp</artifactId>
+            <version>4.6.0</version>
+        </dependency>
     </dependencies>
   </dependencyManagement>
   <build>

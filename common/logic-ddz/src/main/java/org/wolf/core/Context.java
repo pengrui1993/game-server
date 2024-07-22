@@ -23,6 +23,8 @@ public interface Context <PHA extends Enum<PHA>
     default void onTick(float dt){cur().update(dt);}
     @Write
     default void onEvent(int cmd,Object... params){cur().event(cmd,params);}
+    @Write
+    default void onDestroy(){cur().end();cur(null);}
     default void sleep(long l){ sleep0(l);}
     default long now(){ return now0();}
     static long now0(){ return System.currentTimeMillis();}

@@ -1,6 +1,16 @@
 package org.games;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.springframework.cache.support.NullValue;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 //
 //import com.alibaba.fastjson.support.spring.FastJsonRedisSerializer;
@@ -88,8 +98,29 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 //    }
 //}
 public class JacksonTest {
-    public static void main(String[] args) {
-        ObjectMapper om = new ObjectMapper();
-
+    public static void main(String[] args) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        final String tag = "@class";
+        class NullSer extends StdSerializer<NullValue>{
+            protected NullSer(){
+                super(NullValue.class);
+            }
+            @Override
+            public void serialize(NullValue nullValue, JsonGenerator jgen, SerializerProvider sep) throws IOException {
+                jgen.writeStartObject();
+                jgen.writeStringField(tag, NullValue.class.getName());
+                jgen.writeEndObject();
+            }
+        }
+        mapper.registerModule(new SimpleModule().addSerializer(new NullSer()));
+        mapper.enableDefaultTypingAsProperty(ObjectMapper.DefaultTyping.NON_FINAL, tag);
+        HashMap<String,Object> map = new HashMap<>();
+        map.put("int",1);
+        map.put("boolean",true);
+        map.put("string","message");
+        map.put("array", new ArrayList<Integer>(){{add(0);add(1);}});
+        StringWriter sw = new StringWriter();
+        mapper.writeValue(sw,map);
+        System.out.println(sw);
     }
 }

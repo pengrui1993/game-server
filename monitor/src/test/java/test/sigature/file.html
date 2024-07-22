@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<input type="file" id="myfile" onchange="onMyfileChange(this)" />
+</body>
+<script>
+    let o = {
+        a:function(){
+            if(this==o)//this==o;
+                console.log(this)
+        }
+    }
+    o.a()
+</script>
+<script type="text/javascript">
+    function onMyfileChange(fileInput) {
+        if(fileInput.files[0] == undefined) {
+            return ;
+        }
+    //      /Users/pengrui/.m2/repository/org/apache/mina/mina-core/2.2.3/mina-core-2.2.3.jar -> 2a978175e8775dd2e5bb2c66ce1a0ccef9f49385
+
+        var filename = fileInput.files[0].name;
+        // var filesize = fileInput.files[0].size;
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+            console.log("File", filename, ":");
+            //
+            crypto.subtle.digest('SHA-1', ev.target.result).then(hashBuffer => {
+                // Convert hex to hash, see https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#converting_a_digest_to_a_hex_string
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+                console.log(hashHex);//2a978175e8775dd2e5bb2c66ce1a0ccef9f49385
+            }).catch(ex => console.error(ex));
+        };
+        reader.onerror = function(err) {
+            console.error("Failed to read file", err);
+        }
+        reader.readAsArrayBuffer(fileInput.files[0]);
+    }
+</script>
+</html>

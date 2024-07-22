@@ -1,8 +1,11 @@
 package org.wolf.util;
 
 import java.io.IOException;
+import java.io.PrintStream;
+import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.DatagramChannel;
@@ -10,9 +13,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TalkingRoom {
@@ -136,6 +137,7 @@ public class TalkingRoom {
         AtomicBoolean running = new AtomicBoolean(true);
         List<InetSocketAddress> adds = new ArrayList<>();
         Queue<Thread> threads = new ConcurrentLinkedDeque<>();
+        final PrintStream out = System.out;
         new Thread(()->{
             try {
                 DatagramChannel bind = DatagramChannel.open().bind(new InetSocketAddress(0));
@@ -147,6 +149,7 @@ public class TalkingRoom {
 //                System.out.println(local);//InetSocketAddress
 //                System.out.println(bind.getRemoteAddress());//null
                 ByteBuffer buf = ByteBuffer.allocate(512);
+                Set<SocketAddress> target = new CopyOnWriteArraySet<>();
                 SelectionKey serverKey = bind.register(s, SelectionKey.OP_READ);
                 while(running.get()){
                     if(s.select(100)==0)continue;
@@ -155,21 +158,25 @@ public class TalkingRoom {
                         SelectionKey key = itr.next();
                         if(key.isReadable()){
                             SocketAddress receive = bind.receive(buf.clear());
-
                             buf.flip();
                             if(!buf.isDirect()){
                                 if(buf.remaining()==4
-                                        &&buf.array()[0]==0
-                                        &&buf.array()[1]==0
-                                        &&buf.array()[2]==0
-                                        &&buf.array()[3]==0
+                                    &&buf.array()[0]==0
+                                    &&buf.array()[1]==0
+                                    &&buf.array()[2]==0
+                                    &&buf.array()[3]==0
                                 ){
-                                    System.out.println("server,local:"+bind.getLocalAddress());
-                                    System.out.println("server,remote:"+bind.getRemoteAddress());
+                                    target.add(receive);
+//                                    System.out.println("server,local:"+bind.getLocalAddress());
+//                                    System.out.println("server,remote:"+bind.getRemoteAddress());
                                     System.out.println("server,rcv hello,client:"+receive);
                                 }else{
-                                    System.out.println("server side:"+receive);
-                                    System.out.println("server side:"+new String(buf.array(),0,buf.remaining()));
+                                    buf.mark();
+//                                    System.out.println("server side:"+receive);
+//                                    System.out.println("server side:"+new String(buf.array(),0,buf.remaining()));
+                                    for (SocketAddress ad : target) {
+                                        bind.send(buf.reset(),ad);
+                                    }
                                 }
                             }
                         }else{
@@ -187,54 +194,70 @@ public class TalkingRoom {
             setDaemon(true);
             threads.offer(this);
         }}.start();
-
-        BlockingQueue<String> msg = new LinkedBlockingQueue<>();
-        new Thread(()->{
-            while(adds.isEmpty())Thread.yield();
-            InetSocketAddress server = adds.get(0);
-            try {
-                DatagramChannel c = DatagramChannel.open().bind(null);
-                while(!c.connect(server).isConnected())Thread.yield();
-                System.out.println("client side,local:"+c.getLocalAddress());
-                System.out.println("client side,remote:"+c.getRemoteAddress());
-                c.send(ByteBuffer.wrap(new byte[]{0,0,0,0}),server);
-                while(running.get()){
-                    try {
-                        int len;
-                        String take = msg.take();
-                        if("quit".equals(take))break;
-                        ByteBuffer buf = ByteBuffer.wrap(take.getBytes(StandardCharsets.UTF_8));
-                        len = c.send(buf.mark(),server);
-                        System.out.println("client send len:"+len);
+        class Client extends Thread{
+            Client(){
+                setDaemon(true);
+                threads.offer(this);
+            }
+            final BlockingQueue<String> msg = new LinkedBlockingQueue<>();
+            void add(String msg){
+                this.msg.offer(msg);
+            }
+            @Override
+            public void run() {
+                while(adds.isEmpty())Thread.yield();
+                InetSocketAddress server = adds.get(0);
+                try {
+                    DatagramChannel c = DatagramChannel.open().bind(null);
+                    while(!c.connect(server).isConnected())Thread.yield();
+//                    System.out.println("client side,local:"+c.getLocalAddress());
+//                    System.out.println("client side,remote:"+c.getRemoteAddress());
+                    c.send(ByteBuffer.wrap(new byte[]{0,0,0,0}),server);
+                    DatagramPacket pkt = new DatagramPacket(new byte[512],512);
+                    c.socket().setSoTimeout(10);
+                    while(running.get()){
+                            int len;
+                            String take = msg.poll();
+                            if(Objects.isNull(take)){
+                                Thread.yield();
+                            }else{
+                                if("quit".equals(take))break;
+                                ByteBuffer buf = ByteBuffer.wrap(take.getBytes(StandardCharsets.UTF_8));
+                                len = c.send(buf.mark(),server);
+                                out.println("client send len:"+len);
+                            }
+                            try{
+                                c.socket().receive(pkt);
+                                out.println("client "+ c.getLocalAddress()+" received:"+new String(pkt.getData(),pkt.getOffset(),pkt.getLength()));
+                            }catch (SocketTimeoutException e){
+                                Thread.yield();
+                            }
 //                        len = c.send(buf.reset(),server);
 //                        System.out.println("client send len:"+len);
-                    } catch (InterruptedException ignored) {
-                        System.out.println("client interrupted");
                     }
+                    c.disconnect().close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
-                c.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+                System.out.println("client quit done");
             }
-            System.out.println("client quit done");
-
-        }){{
-            setDaemon(true);
-            threads.offer(this);
-        }}.start();
+        }
+        List<Client> clients = List.of(new Client(),new Client(),new Client());
+        clients.forEach(Thread::start);
         Scanner scanner = new Scanner(System.in);
+        ThreadLocalRandom r = ThreadLocalRandom.current();
         String line;
         while(running.get()){
             line = scanner.nextLine().trim();
+            final String msg = line;
             switch (line){
                 case "quit"-> running.set(false);
                 case "help"->{}
-                default ->msg.offer(line);
+                default ->clients.get(r.nextInt(clients.size())).add(msg);
             }
         }
         Thread thread;
         while(null!=(thread = threads.poll())){
-            thread.interrupt();
             try {
                 thread.join();
             } catch (InterruptedException ignored) {}

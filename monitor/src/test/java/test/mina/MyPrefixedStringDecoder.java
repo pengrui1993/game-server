@@ -1,4 +1,4 @@
-package test;
+package test.mina;
 
 import org.apache.mina.core.buffer.BufferDataException;
 import org.apache.mina.core.buffer.IoBuffer;

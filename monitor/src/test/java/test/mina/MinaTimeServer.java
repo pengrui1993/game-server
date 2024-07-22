@@ -1,4 +1,4 @@
-package test;
+package test.mina;
 
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.service.IoHandlerAdapter;

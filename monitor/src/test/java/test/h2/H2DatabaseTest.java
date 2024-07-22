@@ -1,4 +1,4 @@
-package test;
+package test.h2;
 
 import org.h2.server.web.DbStarter;
 import org.h2.server.web.JakartaDbStarter;

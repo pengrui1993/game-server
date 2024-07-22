@@ -2,6 +2,10 @@ package org.games;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+/**
+ * {@link org.games.event.EventUtils#classes}
+ */
 public class GsonTest {
     static class Bean{
         public String name = "hello";
