@@ -15,8 +15,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-
+/*
+https://avaldes.com/java-nio-datagramchannel-tutorial/
+ */
 public class TalkingRoom {
+    static final PrintStream out = System.out;
     @Override
     public String toString() {
         return "key:"+joinKey+",host:"+ip+",port:"+port;
@@ -38,6 +41,7 @@ public class TalkingRoom {
         return new TalkingRoom(){{
             userId = new HashSet<>(userIdList);
             bytes = joinKey.getBytes(StandardCharsets.UTF_8);
+            out.println("talking,room created,"+this);
         }};
     }
     private TalkingRoom(){
@@ -109,7 +113,7 @@ public class TalkingRoom {
             e.printStackTrace(System.out);
         }
     }
-    public void close(){
+    void close(){
         Optional.ofNullable(server).ifPresent(s-> {
             try {
                 selector.close();
@@ -120,6 +124,7 @@ public class TalkingRoom {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+            System.out.println("room closed,"+this);
         });
     }
     private boolean isHello(ByteBuffer buf){

@@ -3,33 +3,43 @@ package org.wolf.race;
 import org.wolf.action.Action;
 import org.wolf.core.Final;
 import org.wolf.evt.Event;
+import org.wolf.util.TalkingRoom;
+import org.wolf.util.TalkingRoomManager;
+import org.wolf.util.WolfBombUtil;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-class SecondRacingPhaser extends MinorPhaser{
+class FirstSpeechingPhaser extends MinorPhaser{
 
-    private final Context ctx;
+    protected final Context ctx;
+    final Map<String, Boolean> handsState;
     final List<String> raceUp;
     final List<String> raceDown;
+    final List<String> upToDown;
     @Final
     String startUser;
     String curUser;
     boolean talkingCCW;//anticlockwise/counterclockwise and  clockwise
     float timeLimit;
     float last;
-    public SecondRacingPhaser(Context ctx, List<String> raceUp, List<String> raceDown) {
+    private @Final TalkingRoom room;
+    public FirstSpeechingPhaser(Context ctx, Map<String, Boolean> handsResult) {
         this.ctx = ctx;
-        this.raceUp = raceUp;
-        this.raceDown = raceDown;
-        timeLimit = 15;
+        this.handsState = handsResult;
+        List<String> list = handsResult.entrySet().stream().filter(Map.Entry::getValue).map(Map.Entry::getKey).toList();
+        raceUp = new ArrayList<>();
+        upToDown = new ArrayList<>();
+        ctx.joinedUsers().forEach(s->{if(list.contains(s))raceUp.add(s);});
+        raceDown = handsResult.entrySet().stream().filter(e->!e.getValue()).map(Map.Entry::getKey).toList();
+        timeLimit = 30;
     }
+    boolean test;
     @Override
     public Minor state() {
-        return Minor.TALKING_TO_RACE;
+        return Minor.SPEECHING;
     }
     float curLast;
-    boolean test;
     @Override
     public void update(float dt) {
         last+=dt;
@@ -48,14 +58,23 @@ class SecondRacingPhaser extends MinorPhaser{
         curUser = next;
         curLast = 0;
     }
+
+    @Override
+    public void end() {
+        TalkingRoomManager.MGR.destroy(room.joinKey);
+        super.end();
+    }
+
     @Override
     public void begin() {
         ThreadLocalRandom r = ThreadLocalRandom.current();
         startUser = curUser = raceUp.get(r.nextInt(raceUp.size()));
         talkingCCW = r.nextBoolean();
-        out.println("second racing,current start with counterclockwise:"+talkingCCW);
+        out.println("first,current start with counterclockwise:"+talkingCCW);
         last = curLast = 0;
         test = false;
+        room = TalkingRoomManager.MGR.create(ctx.top().getJoinedUsers());
+        room.active(curUser);
     }
 
     @Override
@@ -64,23 +83,36 @@ class SecondRacingPhaser extends MinorPhaser{
         switch (event){
             case ACTION -> {
                 if(params.length<1){
-                    out.println("seconds race require 1 params");
+                    out.println("first,params require more then 1");
                     return;
                 }
-                Action a = Action.from(Integer.class.cast(params[0]));
-                switch (a){
-                    case RACE_STOP_TALKING->{
+                switch (Action.from(Integer.class.cast(params[0]))){
+                    case RACE_HANDS_DOWN -> {
                         if(params.length<2){
-                            out.println("second race,require 2 params");
+                            out.println("race choice action require(action,sender,yes/no)");
                             return;
                         }
                         final String sender = String.class.cast(params[1]);
+                        Boolean b = handsState.get(sender);
+                        if(Objects.isNull(b)||!b){
+                            out.println("invalid userId");
+                            return;
+                        }
+                        this.handsState.put(sender,false);
+                        upToDown.add(sender);
                         //notify
                         out.println(sender+" cancel race");
                         next();
                     }
+                    case WOLF_BOMB ->{
+                        if(params.length<2){
+                            out.println("race speeching, wolf bomb");
+                            return;
+                        }
+                        WolfBombUtil.handle(ctx.top(),String.class.cast(params[1]));
+                    }
                     case TEST_DONE -> {
-                        out.println("second racing test enabled");
+                        out.println("first racing test enabled");
                         test = true;
                     }
                 }

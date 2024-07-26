@@ -27,7 +27,7 @@ class WolfPhaser extends MajorPhaser {
         for (String s : ctx.aliveWolf()) {
             wolfSelectResult.put(s,null);
         }
-        out.println("wolf phaser begin,wolfs "+wolfSelectResult);
+        out.println("wolf phaser begin,lived wolfs "+wolfSelectResult);
         test = false;
         limit = ctx.setting.wolfActionTimeoutLimit;
     }

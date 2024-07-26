@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class HelloLuceneTest {
@@ -35,40 +36,51 @@ public class HelloLuceneTest {
         URL resource = HelloLuceneTest.class.getClassLoader().getResource("hospital.txt");
         assert null!=resource;
         path = resource.toString();
-        System.out.println(resource);
+//        System.out.println(resource);
     }
     static void createToDisk() throws IOException, ParseException {
         long begin = System.currentTimeMillis();
-        loadData();
         buildIndexOnDisk();
         System.out.println("spend :"+(System.currentTimeMillis()-begin)+"ms");
         waitQuery();
     }
     static void createToMemory() throws IOException, ParseException {
         long begin = System.currentTimeMillis();
-        loadData();
         buildIndexInMemory();
         System.out.println("spend :"+(System.currentTimeMillis()-begin)+"ms");
         waitQuery();
     }
-    static void info() throws IOException {
+    static void info() throws Exception {
         FSDirectory index = FSDirectory.open(Paths.get("/tmp/lucene"));
         System.out.println(Arrays.stream(index.listAll()).collect(Collectors.toList()));
         index.close();
     }
-    public static void main(String[] args) throws IOException, ParseException {
-        createToDisk();
+    public static void main(String[] args) throws Exception {
+//        createToDisk();
 //        createToMemory();
 //        info();
+        TopDocs hos = search("三级甲等", 11,110,500);
     }
 
     private static void loadData() throws IOException {
         Scanner s = //new Scanner(Files.newInputStream(Paths.get(path)));
-        new Scanner(ClassLoader.getSystemResourceAsStream("hospital.txt"));
+                new Scanner(ClassLoader.getSystemResourceAsStream("hospital.txt"));
         while(s.hasNext()){
             String s1 = s.nextLine();
             if(null!=s1&& !s1.trim().isEmpty()){
                 dataList.add(s1);
+            }
+        }
+        s.close();
+    }
+
+    private static void loadData(Consumer<String> line) throws IOException {
+        Scanner s = //new Scanner(Files.newInputStream(Paths.get(path)));
+                new Scanner(ClassLoader.getSystemResourceAsStream("hospital.txt"));
+        while(s.hasNext()){
+            String s1 = s.nextLine();
+            if(null!=s1&& !s1.trim().isEmpty()){
+                line.accept(s1);
             }
         }
         s.close();
@@ -82,6 +94,7 @@ public class HelloLuceneTest {
         dir = index;
         IndexWriterConfig config = new IndexWriterConfig(analyzer);
         IndexWriter w = new IndexWriter(index, config);
+        loadData();
         for (String s : dataList) {
             Document doc = new Document();
             doc.add(new TextField(field, s, Field.Store.YES));
@@ -101,11 +114,15 @@ public class HelloLuceneTest {
             return;
         IndexWriterConfig config = new IndexWriterConfig(analyzer);
         IndexWriter w = new IndexWriter(index, config);
-        for (String s : dataList) {
+        loadData(s->{
             Document doc = new Document();
             doc.add(new TextField(field, s, Field.Store.YES));
-            w.addDocument(doc);
-        }
+            try {
+                w.addDocument(doc);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
         w.close();
     }
 
@@ -145,6 +162,7 @@ public class HelloLuceneTest {
         String line;
         ScoreDoc pre = null;
         String preLine = null;
+        dataList.clear();
         while(null!=(line=sc.nextLine())){
             if("quit".equals(line))
                 break;
@@ -173,17 +191,27 @@ public class HelloLuceneTest {
             System.out.println((i + 1) + ".\t" + d.get(field));
         }
     }
-    public TopDocs search(String query, int pageNumber) throws IOException, ParseException {
+    static long now(){ return System.currentTimeMillis();}
+    /*
+        if pageNumber*pageSize > numHits then hit 0
+     */
+    public static TopDocs search(String query, int pageNumber,int numHits,int totalHitsTr) throws IOException, ParseException {
+        long start = now();
+        buildIndexOnDisk();
         IndexReader reader = DirectoryReader.open(dir);
         IndexSearcher searcher = new IndexSearcher(reader);
         QueryParser parser = new QueryParser(field, ana);
         Query searchQuery = parser.parse(query);
-        TopScoreDocCollector collector = TopScoreDocCollector.create(1000, 1111);
+        TopScoreDocCollector collector = TopScoreDocCollector.create(numHits, totalHitsTr);
         final int SEARCH_RESULT_PAGE_SIZE = 10;
         int startIndex = (pageNumber - 1) * SEARCH_RESULT_PAGE_SIZE;
         searcher.search(searchQuery, collector);
-
         TopDocs topDocs = collector.topDocs(startIndex, SEARCH_RESULT_PAGE_SIZE);
+        printDoc(topDocs,searcher);
+//        System.out.println(topDocs.totalHits.value);//719
+//        System.out.println(topDocs.totalHits.relation);//GREATER_THAN_OR_EQUAL_TO
+        System.out.println(topDocs.totalHits+" time:"+(now()-start));//719+ hits time:245
+        reader.close();
         return topDocs;
     }
 }

@@ -32,6 +32,17 @@
         <maven.dependency.plugin.version>3.6.0</maven.dependency.plugin.version>
     </properties>
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/org.gagravarr/vorbis-java-core -->
+        <dependency>
+            <groupId>org.gagravarr</groupId>
+            <artifactId>vorbis-java-core</artifactId>
+            <version>0.8</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.gitlab.9lukas5/jaad     for aac player-->
+        <dependency>
+            <groupId>com.gitlab.9lukas5</groupId>
+            <artifactId>jaad</artifactId>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

@@ -8,7 +8,7 @@ public class Wolf implements org.wolf.role.Wolf {
         this.ctx = ctx;
         this.lived = true;
     }
-    private boolean lived;
+    public boolean lived;
     @Override
     public boolean alive() {
         return lived;

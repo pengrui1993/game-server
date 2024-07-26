@@ -3,45 +3,42 @@ package org.wolf.race;
 import org.wolf.action.Action;
 import org.wolf.core.Final;
 import org.wolf.evt.Event;
+import org.wolf.util.TalkingRoom;
+import org.wolf.util.TalkingRoomManager;
+import org.wolf.util.WolfBombUtil;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-class FirstRacingPhaser extends MinorPhaser{
+class SecondSpeechingPhaser extends MinorPhaser{
 
-    protected final Context ctx;
-    final Map<String, Boolean> handsState;
+    private final Context ctx;
     final List<String> raceUp;
     final List<String> raceDown;
-    final List<String> upToDown;
     @Final
     String startUser;
     String curUser;
     boolean talkingCCW;//anticlockwise/counterclockwise and  clockwise
-    float timeLimit;
+    float limit;
     float last;
-    public FirstRacingPhaser(Context ctx, Map<String, Boolean> handsResult) {
+    public SecondSpeechingPhaser(Context ctx, List<String> raceUp, List<String> raceDown) {
         this.ctx = ctx;
-        this.handsState = handsResult;
-        List<String> list = handsResult.entrySet().stream().filter(Map.Entry::getValue).map(Map.Entry::getKey).toList();
-        raceUp = new ArrayList<>();
-        upToDown = new ArrayList<>();
-        ctx.joinedUsers().forEach(s->{if(list.contains(s))raceUp.add(s);});
-        raceDown = handsResult.entrySet().stream().filter(e->!e.getValue()).map(Map.Entry::getKey).toList();
-        timeLimit = 30;
+        this.raceUp = raceUp;
+        this.raceDown = raceDown;
+        limit = 15;
+        limit = ctx.top().setting.secondSpeechingTimeLimit;
     }
-    boolean test;
     @Override
     public Minor state() {
-        return Minor.TALKING_TO_RACE;
+        return Minor.SPEECHING;
     }
     float curLast;
     @Override
     public void update(float dt) {
         last+=dt;
         curLast+=dt;
-        if(curLast>timeLimit||test){
-            ctx.changeState(new VotingPhaser(ctx,raceUp,raceDown));
+        if(curLast> limit){
+            next();
         }
     }
     private void next(){
@@ -59,41 +56,50 @@ class FirstRacingPhaser extends MinorPhaser{
         ThreadLocalRandom r = ThreadLocalRandom.current();
         startUser = curUser = raceUp.get(r.nextInt(raceUp.size()));
         talkingCCW = r.nextBoolean();
-        out.println("first,current start with counterclockwise:"+talkingCCW);
+        out.println("second racing,current start with counterclockwise:"+talkingCCW);
         last = curLast = 0;
-        test = false;
+        room = TalkingRoomManager.MGR.create(ctx.top().getJoinedUsers());
+        room.active(curUser);
     }
-
+    private @Final TalkingRoom room;
+    @Override
+    public void end() {
+        TalkingRoomManager.MGR.destroy(room.joinKey);
+        super.end();
+    }
     @Override
     public void event(int type, Object... params) {
         Event event = Event.from(type);
         switch (event){
             case ACTION -> {
                 if(params.length<1){
-                    out.println("first,params require more then 1");
+                    out.println("seconds race require 1 params");
                     return;
                 }
-                switch (Action.from(Integer.class.cast(params[0]))){
-                    case RACE_HANDS_DOWN -> {
+                Action a = Action.from(Integer.class.cast(params[0]));
+                switch (a){
+                    case RACE_STOP_TALKING->{
                         if(params.length<2){
-                            out.println("race choice action require(action,sender,yes/no)");
+                            out.println("second race,require 2 params");
                             return;
                         }
                         final String sender = String.class.cast(params[1]);
-                        Boolean b = handsState.get(sender);
-                        if(Objects.isNull(b)||!b){
-                            out.println("invalid userId");
-                            return;
-                        }
-                        this.handsState.put(sender,false);
-                        upToDown.add(sender);
                         //notify
                         out.println(sender+" cancel race");
                         next();
                     }
+                    case WOLF_BOMB ->{
+                        if(params.length<2){
+                            out.println("race speeching, wolf bomb");
+                            return;
+                        }
+                        WolfBombUtil.handle(ctx.top(),String.class.cast(params[1]));
+                    }
                     case TEST_DONE -> {
-                        out.println("first racing test enabled");
-                        test = true;
+                        out.println("second racing test enabled");
+                        do{
+                            next();
+                        }while(!Objects.equals(curUser,startUser));
                     }
                 }
             }

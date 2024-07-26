@@ -7,6 +7,7 @@ import org.wolf.evt.Event;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 class HandsUpPhaser extends MinorPhaser {
     private final Context ctx;//RacePhaser
@@ -38,7 +39,10 @@ class HandsUpPhaser extends MinorPhaser {
     public void update(float dt) {
         last+=dt;
         if(last>=limit||test){
-            ctx.changeState(new FirstRacingPhaser(ctx,handsResult));
+            if(!handsResult.values().stream().filter(c->c).toList().isEmpty())
+                ctx.changeState(new FirstSpeechingPhaser(ctx,handsResult));
+            else
+                ctx.changeState(new DonePhaser(ctx,null));
         }
     }
     @Override
@@ -51,6 +55,7 @@ class HandsUpPhaser extends MinorPhaser {
     public void event(int type, Object... params) {
         Event event = Event.from(type);
         switch (event){
+            case NULL -> {}
             case ACTION -> {
                 if(params.length<1) {
                     out.println("hands up,require more then one params");
@@ -74,6 +79,8 @@ class HandsUpPhaser extends MinorPhaser {
                     }
                     case TEST_DONE->{
                         out.println("hands up test enabled");
+                        ThreadLocalRandom r = ThreadLocalRandom.current();
+                        handsResult.replaceAll((k, v) -> r.nextBoolean());
                         test=true;
                     }
                 }

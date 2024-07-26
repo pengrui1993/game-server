@@ -13,8 +13,11 @@ public class Setting {
     public float orderingLimit = 10;
     public float votingLimit=6;
     public float lastWordsActionTimeoutLimit = 5;
-    public float preparingActionTimeoutLimit = 5;
+    public float preparingActionTimeoutLimit = 15;
     public float protectorActionTimeoutLimit = 5;
+
+    public float secondSpeechingTimeLimit = 15;
+    public float firstSpeechingTimeLimit = 15;
     Setting older;
     void copy(){
         Setting tmp = new Setting();

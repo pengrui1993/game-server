@@ -5,6 +5,7 @@ import org.wolf.core.Final;
 import org.wolf.evt.Event;
 import org.wolf.util.TalkingRoom;
 import org.wolf.util.TalkingRoomManager;
+import org.wolf.util.WolfBombUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +40,7 @@ class TalkingPhaser extends MajorPhaser {
                 .filter(e->e.getValue().alive())
                 .map(Map.Entry::getKey)
                 .toList();
-        ctx.joinedUsers.forEach(e->{if(living.contains(e))aliveUser.add(e);});
+        ctx.joinedUsers.stream().filter(living::contains).forEach(aliveUser::add);
         final ThreadLocalRandom r = ThreadLocalRandom.current();
         startUser = curUser = aliveUser.get(r.nextInt(aliveUser.size()));
         this.orderingCCW = ctx.talkingOrderingCCW;
@@ -48,13 +49,12 @@ class TalkingPhaser extends MajorPhaser {
         ctx.curDayTalkingTimes++;
         room = TalkingRoomManager.MGR.create(ctx.joinedUsers);
         room.active(curUser);
-        out.println("talking,room created:"+room);
         out.println("talking phaser begin , ordering ccw:"+this.orderingCCW
                 +",current speaking user:"+curUser);
     }
     @Override
     public void end() {
-        room.close();
+        TalkingRoomManager.MGR.destroy(room.joinKey);
         out.println("talking phaser end");
     }
 
@@ -79,10 +79,19 @@ class TalkingPhaser extends MajorPhaser {
                         }
                         next();
                     }
+                    case WOLF_BOMB -> {
+                        if(params.length<2){
+                            out.println("talking phaser,wolf bomb require 2 params");
+                            return;
+                        }
+                        WolfBombUtil.handle(ctx,String.class.cast(params[1]));
+                    }
                     case TEST_DONE -> {
                         out.println("talking phaser,test enabled");
                         test = true;
-                        while(!Objects.equals(curUser,startUser))next();
+                        do{
+                            next();
+                        }while (!Objects.equals(curUser,startUser));
                     }
                 }
             }
@@ -96,7 +105,6 @@ class TalkingPhaser extends MajorPhaser {
         last+=dt;
         curLast+=dt;
         if(curLast>=limit||test){
-//            while(!Objects.equals(curUser,startUser))next();
             ctx.changeState(new VotingPhaser(ctx));
         }
     }

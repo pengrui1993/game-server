@@ -17,6 +17,6 @@ public interface Role {
         Optional.ofNullable(castTo(clazz)).ifPresent(c);
     }
     default String info(){
-        return role().name();
+        return "["+role().name()+",lived:"+alive()+"]";
     }
 }

@@ -16,7 +16,7 @@ class VotingPhaser extends MinorPhaser{
         this.ctx = ctx;
         this.raceUp = raceUp;
         this.raceDown = raceDown;
-        this.first = ctx.cur().getClass()==FirstRacingPhaser.class;;
+        this.first = ctx.cur().getClass()== FirstSpeechingPhaser.class;;
     }
     @Override
     public Minor state() {
@@ -26,7 +26,7 @@ class VotingPhaser extends MinorPhaser{
     @Override
     public void begin() {
         last = 0;
-        out.println("start vote");
+        out.println("voting,start vote");
         test = false;
     }
     boolean test;
@@ -59,7 +59,7 @@ class VotingPhaser extends MinorPhaser{
             out.println("pass:"+reject);
             out.println("vote:"+counter);
             Runnable noSergeant =()->{
-                if(first) ctx.changeState(new SecondRacingPhaser(ctx,raceUp,raceDown));
+                if(first) ctx.changeState(new SecondSpeechingPhaser(ctx,raceUp,raceDown));
                 else ctx.changeState(new DonePhaser(ctx,null));
             };
             if(counter.isEmpty()){
@@ -107,7 +107,7 @@ class VotingPhaser extends MinorPhaser{
                         }
                         voteResult.put(voter,voted);
                         //notify
-                        out.println("voting ok");
+                        out.println("voting ok,"+voter+" voted:"+voted);
                     }
                     case TEST_DONE->{
                         out.println("voting test enabled");

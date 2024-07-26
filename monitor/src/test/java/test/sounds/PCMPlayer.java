@@ -9,7 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class PCMPlayer {
-    static final String path = "/Users/pengrui/learn/emulator/etc.proj/sdlpcm/theshow.pcm";
+//    static final String path = "/Users/pengrui/learn/emulator/etc.proj/sdlpcm/theshow.pcm";
+    public static final String path = "/Users/pengrui/learn/emulator/proj/sdlpcm/theshow.pcm";
     private static final int SAMPLE_RATE = 22050*2;
     private static final int BUFFER_SIZE = 4096;
     //ffplay -f s16le -ac 2 -ar 44100 theshow.pcm
@@ -116,7 +117,7 @@ public class PCMPlayer {
         is.close();
     }
     public static void play(int al) throws IOException,LineUnavailableException {
-
+        //ffplay -f s16le -ac 2 -ar 44100 theshow.pcm
         AudioFormat fmt = al>0?FORMAT2:new AudioFormat(SAMPLE_RATE,16,2,true,false);//same as FORMAT3
         int len;
         SourceDataLine line;

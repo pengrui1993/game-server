@@ -42,6 +42,12 @@
 
   <dependencyManagement>
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/com.gitlab.9lukas5/jaad -->
+        <dependency>
+            <groupId>com.gitlab.9lukas5</groupId>
+            <artifactId>jaad</artifactId>
+            <version>0.8.8</version>
+        </dependency>
 <!--      <dependency>-->
 <!--        <groupId>junit</groupId>-->
 <!--        <artifactId>junit</artifactId>-->

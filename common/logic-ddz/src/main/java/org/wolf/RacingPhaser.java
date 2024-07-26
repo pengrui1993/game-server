@@ -11,6 +11,10 @@ class RacingPhaser extends MajorPhaser implements Context {
     public Major state() {
         return Major.RACE;
     }
+    @Override
+    public Minor minor() {
+        return cur.state();
+    }
     MinorPhaser cur;
     private final WolfKilling ctx;
     RacingPhaser(WolfKilling ctx) {
@@ -30,7 +34,7 @@ class RacingPhaser extends MajorPhaser implements Context {
     }
     @Override
     public void update(float dt) {
-        cur.update(dt);
+        Context.super.onTick(dt);
     }
 
     @Override

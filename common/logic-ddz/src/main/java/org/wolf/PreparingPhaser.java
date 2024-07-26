@@ -16,6 +16,7 @@ class PreparingPhaser extends MajorPhaser {
     @Final
     String master;
     boolean test;
+    boolean started;
     float last;
     float limit;
     private @Final List<Roles> roles;
@@ -34,25 +35,26 @@ class PreparingPhaser extends MajorPhaser {
     @Override
     public void update(float dt) {
         last+=dt;
-        if(last>limit){
-            randomRemainRoles();
-            change();
-        }else if(test){
+        if(started||test){
             defaultRole();
+            change();
+        }else if(last>limit){
+            randomRemainRoles();
             change();
         }
     }
     @Override
     public void end() {
-        out.println("preparing done,show all players role: ******************");
+        out.println("preparing,show all players role: ******************");
         out.println(ctx.roles);
-        out.println("preparing,******************");
+        out.println("preparing,done ******************");
     }
 
     @Override
     public void begin() {
         master = ctx.master;
         test = false;
+        started = false;
         last = 0;
         limit = ctx.setting.preparingActionTimeoutLimit;
         roles = new ArrayList<>(List.of(
@@ -171,7 +173,7 @@ class PreparingPhaser extends MajorPhaser {
             out.println("must have 12 player to start the game");
             return;
         }
-        change();
+        started = true;
     }
 
     protected void onJoin(String who){

@@ -7,6 +7,7 @@ public enum Action {
     ,LEFT
     ,START_GAME
     ,WOLF_KILL
+    ,WOLF_BOMB
     ,WITCH_ACTION
     ,PREDICTOR_ACTION
     ,RACE_CHOICE

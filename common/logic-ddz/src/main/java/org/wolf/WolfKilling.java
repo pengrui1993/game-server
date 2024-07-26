@@ -6,6 +6,8 @@ import org.wolf.core.Final;
 import org.wolf.core.Read;
 import org.wolf.core.Write;
 import org.wolf.evt.Event;
+import org.wolf.race.Minor;
+import org.wolf.race.MinorPhaser;
 import org.wolf.role.NoneRole;
 import org.wolf.role.Role;
 import org.wolf.role.Roles;
@@ -253,7 +255,10 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
                 ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//VotingPhaser
                 ,()-> {if(k.cur.getClass()== LastWordsPhaser.class)
                     k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//LastWordsPhaser
-
+                ,()-> {if(k.cur.getClass()== OrderingPhaser.class)
+                    k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//OrderingPhaser
+                ,()-> {if(k.cur.getClass()==TalkingPhaser.class)
+                    k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//TalkingPhaser
 
                 ,WolfKilling::loop
         );
@@ -280,5 +285,20 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
         }else{
             cur.out.println("invalid set sergeant");
         }
+    }
+    public List<String> getJoinedUsers(){
+        return Collections.unmodifiableList(joinedUsers);
+    }
+    public Map<String,Role> getRoles(){
+        return Collections.unmodifiableMap(roles);
+    }
+    public boolean wolfKilled(){
+        return Objects.nonNull(calcCtx.killingTargetUserId);
+    }
+    public Minor minor(){
+        return cur.minor();
+    }
+    public MajorPhaser newWolfPhaser() {
+        return new WolfPhaser(this);
     }
 }
