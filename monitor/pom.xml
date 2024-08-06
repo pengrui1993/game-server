@@ -31,28 +31,42 @@
         <maven.jar.plugin.version>3.3.0</maven.jar.plugin.version>
         <maven.dependency.plugin.version>3.6.0</maven.dependency.plugin.version>
     </properties>
+    <!--
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+    <dependency>
+            <groupId>com.github.manevolent</groupId>
+            <artifactId>ffmpeg4j</artifactId>
+            <version>-SNAPSHOT</version>
+    </dependency>
+    -->
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/org.bytedeco/ffmpeg -->
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>ffmpeg</artifactId>
-            <version>6.1.1-1.5.10</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.bytedeco/ffmpeg-platform
+
+        <!-- https://mvnrepository.com/artifact/com.github.manevolent/ffmpeg4j
         -->
         <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>ffmpeg-platform</artifactId>
-            <version>6.1.1-1.5.10</version>
+            <groupId>com.github.manevolent</groupId>
+            <artifactId>ffmpeg4j</artifactId>
+            <version>-4f7db5710c-1</version>
+            <scope>system</scope>
+            <systemPath>/Users/pengrui/.m2/repository/com/github/manevolent/ffmpeg4j/-4f7db5710c-1/ffmpeg4j--4f7db5710c-1.jar</systemPath>
         </dependency>
-        <!--        <dependency>-->
-<!--            <groupId>ws.schild</groupId>-->
-<!--            <artifactId>jave-core</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>ws.schild</groupId>-->
-<!--            <artifactId>jave-nativebin-osxm1</artifactId>-->
-<!--        </dependency>-->
+        <!-- https://mvnrepository.com/artifact/org.bytedeco/javacv-platform -->
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacv-platform</artifactId>
+            <version>1.5.8</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.bytedeco/javacv -->
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacv</artifactId>
+            <version>1.5.8</version>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/com.auth0/java-jwt -->
         <dependency>
             <groupId>com.auth0</groupId>

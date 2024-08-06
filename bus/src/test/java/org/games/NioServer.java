@@ -21,6 +21,7 @@ public class NioServer {
     long timeout;
     ServerHandler serverHandler;
     Map<SocketChannel,ClientHandler> clients = new HashMap<>();
+
     public NioServer(int port) {
         this.port = port;
         timeout = 10;
@@ -128,7 +129,7 @@ public class NioServer {
                     int len = writeBuf.remaining();
                     while(true) {
                         try {
-                            if (((len-client.write(writeBuf))>0)) Thread.yield();
+                            if (((len-client.write(writeBuf))>0)) yield1();
                         } catch (IOException e) {
                             break;
                         }
@@ -161,6 +162,13 @@ public class NioServer {
         }
         c.close();
         nioServer.close();
+    }
+    static void yield1(){
+        try {
+            Thread.sleep(1);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
 
@@ -205,4 +213,5 @@ class Client{
         assert wc==total;
         return total;
     }
+
 }

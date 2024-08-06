@@ -12,5 +12,8 @@
 
     <name>common</name>
     <url>http://maven.apache.org</url>
+    <modules>
+        <module>logic-wolfkilling</module>
+    </modules>
 
 </project>
