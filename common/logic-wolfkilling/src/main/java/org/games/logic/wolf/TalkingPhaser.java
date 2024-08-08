@@ -38,15 +38,16 @@ class TalkingPhaser extends MajorPhaser {
                 .filter(e->e.getValue().alive())
                 .map(Map.Entry::getKey)
                 .toList();
-        ctx.joinedUsers.stream().filter(living::contains).forEach(aliveUser::add);
+        ctx.getJoinedUsers().stream().filter(living::contains).forEach(aliveUser::add);
         final ThreadLocalRandom r = ThreadLocalRandom.current();
         startUser = curUser = aliveUser.get(r.nextInt(aliveUser.size()));
         this.orderingCCW = ctx.talkingOrderingCCW;
         limit = ctx.setting.talkingLimit;
         test = false;
         ctx.curDayTalkingTimes++;
-        room = TalkingRoomManager.MGR.create(ctx.joinedUsers);
+        room = TalkingRoomManager.MGR.create(ctx.getJoinedUsers());
         room.active(curUser);
+        stateChange = false;
         out.println("talking phaser begin , ordering ccw:"+this.orderingCCW
                 +",current speaking user:"+curUser);
     }
@@ -95,7 +96,7 @@ class TalkingPhaser extends MajorPhaser {
                         test = true;
                         do{
                             next();
-                        }while (!Objects.equals(curUser,startUser));
+                        }while (!stateChange);
                     }
                 }
             }
@@ -109,9 +110,14 @@ class TalkingPhaser extends MajorPhaser {
         last+=dt;
         curLast+=dt;
         if(curLast>=limit||test){
+            stateChange = true;
+        }
+        if(stateChange){
             ctx.changeState(new VotingPhaser(ctx));
+            stateChange = false;
         }
     }
+    boolean stateChange;
     private int index(String uid){
         for(int i=0;i<aliveUser.size();i++){
             if(Objects.equals(aliveUser.get(i),uid))return i;
@@ -125,7 +131,7 @@ class TalkingPhaser extends MajorPhaser {
                 ((index+aliveUser.size()-1)%aliveUser.size());
         String s = aliveUser.get(index);
         if(Objects.equals(s,startUser)){
-            ctx.changeState(new VotingPhaser(ctx));
+            stateChange = true;
         }
         curLast = 0;
         curUser = s;

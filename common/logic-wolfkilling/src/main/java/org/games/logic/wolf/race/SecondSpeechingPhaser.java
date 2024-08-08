@@ -26,8 +26,6 @@ class SecondSpeechingPhaser extends MinorPhaser{
         this.ctx = ctx;
         this.raceUp = raceUp;
         this.raceDown = raceDown;
-        limit = 15;
-        limit = ctx.top().setting.secondSpeechingTimeLimit;
     }
     @Override
     public Minor state() {
@@ -61,10 +59,11 @@ class SecondSpeechingPhaser extends MinorPhaser{
         ThreadLocalRandom r = ThreadLocalRandom.current();
         startUser = curUser = raceUp.get(r.nextInt(raceUp.size()));
         talkingCCW = r.nextBoolean();
-        out.println("second racing,current start with counterclockwise:"+talkingCCW);
         last = curLast = 0;
         room = TalkingRoomManager.MGR.create(ctx.top().getJoinedUsers());
         room.active(curUser);
+        limit = ctx.top().setting.secondSpeechingTimeLimit;
+        out.println("second racing,current start with counterclockwise:"+talkingCCW);
     }
     private @Final TalkingRoom room;
     @Override

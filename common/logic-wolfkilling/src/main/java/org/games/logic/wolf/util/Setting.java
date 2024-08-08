@@ -21,8 +21,7 @@ public class Setting {
     public float secondSpeechingTimeLimit = 15;
     public float firstSpeechingTimeLimit = 15;
     public float publishDiedInfoPhaserLimit = 5;
-    Setting older;
-    void copy(){
+    Setting copy(){
         Setting tmp = new Setting();
         for (Field f : this.getClass().getDeclaredFields()) {
             f.setAccessible(true);
@@ -32,14 +31,14 @@ public class Setting {
                 e.printStackTrace(System.out);
             }
         }
-        older = tmp;
+        return tmp;
     }
     public void change(Object... params) {
     }
 
     public static void main(String[] args) {
         Setting setting = new Setting();
-        setting.copy();
-        System.out.println(setting.older.wolfActionTimeoutLimit);
+        Setting older = setting.copy();
+        System.out.println(older.wolfActionTimeoutLimit);
     }
 }

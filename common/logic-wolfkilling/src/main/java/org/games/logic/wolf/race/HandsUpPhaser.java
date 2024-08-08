@@ -24,15 +24,14 @@ class HandsUpPhaser extends MinorPhaser {
     @Override
     public void begin() {
         last = 0;
-        out.println("hands up phaser,please select up or down");
         test = false;
         limit = ctx.top().setting.handsUpTimeoutLimit;
         userSize = ctx.joinedUsers().size();
+        out.println("hands up phaser,please select up or down");
     }
     boolean test;
     float last;
-    @Final
-    float limit;
+    @Final float limit;
     @Override
     public void update(float dt) {
         last+=dt;

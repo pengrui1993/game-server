@@ -35,6 +35,7 @@ class PredictorPhaser extends MajorPhaser {
         predictor = ctx.get(Roles.PREDICTOR).castTo(org.games.logic.wolf.role.Predictor.class);
         last = 0;
         limit = ctx.setting.predictorActionTimeoutLimit;
+        out.println("predictor phaser begin.");
     }
     @Override
     public void end() {
@@ -80,8 +81,7 @@ class PredictorPhaser extends MajorPhaser {
                         }
                         String target = String.class.cast(params[2]);
                         verify = Map.entry(target,Roles.WOLF==ctx.get(target).role());
-                        //notify
-                        out.println("predictor phaser,verify "+verify.getKey()+" result:"+verify.getValue());
+                        ctx.sessions.notifyPredictorPredictor(verify);
                         predictor.ifIsThen(Predictor.class
                                 ,p-> p.verifies.put(verify.getKey(),verify.getValue()));
                     }

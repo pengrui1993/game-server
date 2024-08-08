@@ -19,6 +19,7 @@ class VotingPhaser extends MajorPhaser {
     private float last;
     float limit;
     final Map<String,String> livedVote = new HashMap<>();
+    @Final Set<String> permission;
     @Final boolean talkingAgain;
 
     @Override
@@ -28,17 +29,17 @@ class VotingPhaser extends MajorPhaser {
 
     @Override
     public void begin() {
+        permission = Set.copyOf(ctx.lived());
         test = false;
         last = 0;
         limit = ctx.setting.votingLimit;
-        ctx.lived().forEach(u->livedVote.put(u,null));
+        livedVote.clear();
         talkingAgain = ctx.curDayTalkingTimes==1;
         out.println("voting begin.");
     }
     List<String> abandon;
     Map<String, List<String>> voteResult;
     String votedUserId;
-
     private void calcVoting(){
         abandon = livedVote.entrySet()
                 .stream()
@@ -54,11 +55,15 @@ class VotingPhaser extends MajorPhaser {
                 .map(e -> Map.entry(e.getKey(), e.getValue().stream().map(Map.Entry::getValue).toList()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         out.println("voting,detail:"+collect);
+        out.println("abandon:"+abandon);
         ArrayList<Map.Entry<String, List<String>>> entries = new ArrayList<>(collect.entrySet());
         entries.sort(Comparator.comparingInt(o -> o.getValue().size()));
         Consumer<String> lastWords = (uid)->{
             votedUserId = uid;
-            ctx.changeState(new LastWordsPhaser(ctx,uid,()-> ctx.changeState(new WolfPhaser(ctx))));
+            ctx.changeState(new LastWordsPhaser(ctx,uid,()-> {
+                ctx.deadInfo.addDiedInfoByVote(votedUserId,ctx.day());
+                ctx.changeState(new WolfPhaser(ctx));
+            }));
             ctx.curDayTalkingTimes = 0;
         };
         Runnable noOneDied = ()->{
@@ -108,7 +113,14 @@ class VotingPhaser extends MajorPhaser {
     @Override
     public void update(float dt) {
         last+=dt;
-        if(last>=limit||test){
+        if(last>=limit
+                ||test){
+            Set<String> voted = livedVote.keySet();
+            permission.stream()
+                    .filter(a->!voted.contains(a))
+                    .forEach(b->livedVote.put(b,null));
+        }
+        if(permission.size()==livedVote.size()){
             calcVoting();
         }
     }
@@ -129,23 +141,19 @@ class VotingPhaser extends MajorPhaser {
                     }
                     case VOTING_VOTE -> {
                         if(params.length<3){
-                            out.println("voting,require 1 params ");
+                            out.println("voting,require 3 params ");
                             return;
                         }
                         String sender = String.class.cast(params[1]);
-                        if(!livedVote.containsKey(sender)){
+                        if(!permission.contains(sender)){
                             out.println("voting,not allow to voting");
                             return;
                         }
-                        if(Objects.nonNull(livedVote.get(sender))){
+                        if(livedVote.containsKey(sender)){
                             out.println("voting,already voted");
                             return;
                         }
                         String target = String.class.cast(params[2]);
-                        if(!livedVote.containsKey(target)){
-                            out.println("voting,invalid voted");
-                            return;
-                        }
                         livedVote.put(sender,target);
                         out.println(sender+" vote:"+target);
                     }

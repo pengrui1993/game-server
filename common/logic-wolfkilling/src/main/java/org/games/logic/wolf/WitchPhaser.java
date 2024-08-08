@@ -35,7 +35,12 @@ class WitchPhaser extends MajorPhaser {
     public void update(float dt) {
         last+=dt;
         curLast+=dt;
-        Runnable r1 = ()->{
+        Runnable cancelAction = ()->{
+            if(firstTimes){
+                ctx.calcCtx.medicineSavedUserId = null;
+                needChange = true;
+                return;
+            }
             switch (state){
                 case SAVING -> {
                     ctx.calcCtx.medicineSavedUserId = null;
@@ -48,10 +53,10 @@ class WitchPhaser extends MajorPhaser {
             }
         };
         if(requestedCancel){
-            r1.run();
+            cancelAction.run();
             requestedCancel = false;
         }else if(curLast>=limit){
-            r1.run();
+            cancelAction.run();
         }
         if(innerStateChange){
             if(witch.hasDrug()){
@@ -94,68 +99,74 @@ class WitchPhaser extends MajorPhaser {
         innerStateChange = false;
         out.println("enter witch phaser,first times:"+firstTimes);
     }
-    private void onWitchAction(Object... params){
-        if(params.length < 3) {
-            out.println("witch kill action mission action sender");
-            return;
-        }
-        String sender = String.class.cast(params[1]);
-        if(!Objects.equals(witchId,sender)){
-            out.println("cannot match witch user id");
-            return;
-        }
-        String actionType = String.class.cast(params[2]);
-        switch (actionType){
-            case "save"->{
-                if(state!=State.SAVING){
-                    out.println("witch,state is not saving ,cannot do save");
-                    return;
-                }
-                out.println("on witch save");
-                ctx.calcCtx.medicineSavedUserId = ctx.calcCtx.killingTargetUserId;
-                witch.medicine = false;
-                needChange = true;
-            }
-            case "kill"->{
-                if(state!=State.KILLING){
-                    out.println("witch,state is not killing ,cannot do kill");
-                    return;
-                }
-                if(params.length<4){
-                    out.println("missing kill target");
-                    return;
-                }
-                String target = String.class.cast(params[3]);
-                if(-1==ctx.index(target)){
-                    out.println("invalid target of killing with witch ,target:"+target);
-                    return;
-                }
-                if(!ctx.get(target).alive()){
-                    out.println("target already died");
-                    return;
-                }
-                out.println("on witch kill");
-                ctx.calcCtx.drugKilledUserId = target;
-                witch.drug = false;
-                needChange = true;
-            }
-            case "cancel"-> {
-                out.println("on witch cancel");
-                requestedCancel = true;
-            }
-            default -> out.println("unknown action in witch phaser:"+actionType);
-        }
-    }
     @Override
     public void event(int type, Object... params) {
-        if (params.length < 1) {
-            out.println("event:witch mission action type");
-            return;
-        }
-        if (Event.from(type) == Event.ACTION
-            &&Action.from(Integer.class.cast(params[0])) == Action.WITCH_ACTION
-        ) {
-            onWitchAction(params);
+        switch (Event.from(type)){
+            case NULL -> out.println("witch null");
+            case ACTION -> {
+                if (params.length < 1) {
+                    out.println("event:witch mission action type");
+                    return;
+                }
+                switch (Action.from(Integer.class.cast(params[0]))){
+                    case TEST_DONE -> {
+                        out.println("witch phaser test no impl");
+                    }
+                    case WITCH_ACTION -> {
+                        if(params.length < 3) {
+                            out.println("witch kill action mission action sender");
+                            return;
+                        }
+                        String sender = String.class.cast(params[1]);
+                        if(!Objects.equals(witchId,sender)){
+                            out.println("cannot match witch user id");
+                            return;
+                        }
+                        String actionType = String.class.cast(params[2]);
+                        switch (actionType){
+                            case "save"->{
+                                if(state!=State.SAVING){
+                                    out.println("witch,state is not saving ,cannot do save");
+                                    return;
+                                }
+                                ctx.calcCtx.medicineSavedUserId = ctx.calcCtx.killingTargetUserId;
+                                witch.medicine = false;
+                                needChange = true;
+                                ctx.sessions.notifyWitchSave(witchId);
+                            }
+                            case "kill"->{
+                                if(state!=State.KILLING){
+                                    out.println("witch,state is not killing ,cannot do kill");
+                                    return;
+                                }
+                                if(params.length<4){
+                                    out.println("missing kill target");
+                                    return;
+                                }
+                                String target = String.class.cast(params[3]);
+                                if(-1==ctx.index(target)){
+                                    out.println("invalid target of killing with witch ,target:"+target);
+                                    return;
+                                }
+                                if(!ctx.get(target).alive()){
+                                    out.println("target already died");
+                                    return;
+                                }
+                                ctx.calcCtx.drugKilledUserId = target;
+                                witch.drug = false;
+                                needChange = true;
+                                ctx.sessions.notifyWitchKill(witchId,target);
+                            }
+                            case "cancel"-> {
+                                requestedCancel = true;
+                                ctx.sessions.notifyWitchCancel(witchId);
+                            }
+                            default -> out.println("unknown action in witch phaser:"+actionType);
+                        }
+                        out.println("witch phaser action:"+actionType);
+                    }
+                }
+            }
         }
     }
 }

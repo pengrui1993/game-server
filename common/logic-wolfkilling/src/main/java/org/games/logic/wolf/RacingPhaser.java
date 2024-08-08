@@ -63,7 +63,7 @@ class RacingPhaser extends MajorPhaser implements Context {
     }
     @Override
     public List<String> joinedUsers() {
-        return ctx.joinedUsers;
+        return ctx.getJoinedUsers();
     }
     @Override
     public void setSergeant(String sergeant) {

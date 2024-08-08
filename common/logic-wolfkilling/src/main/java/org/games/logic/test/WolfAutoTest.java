@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Scanner;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 
 
 public class WolfAutoTest {
@@ -37,8 +38,7 @@ public class WolfAutoTest {
             app.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user"+i);
         app.onEvent(Event.ACTION.ordinal(), Action.START_GAME.ordinal(),"user1");
         app.onTick(0.1f);
-        out.println(app.getRoles());
-        out.println(app.cur().getClass());
+        System.out.printf("WolfAutoTest.onPreparingInput,%s,roles:%s",app.cur().getClass(),app.getRoles());
     }
     public void onWitchInput(){
         String uid = app.getId(Roles.WITCH);
@@ -63,6 +63,39 @@ public class WolfAutoTest {
         app.onEvent(Event.ACTION.ordinal(), Action.TEST_DONE.ordinal());
         app.onTick(0.1f);
         out.println(app.minor());
+    }
+    public void onRacingHands1() {
+        boolean random = false;
+        Consumer<String> randomAction = (uid)->{
+            ThreadLocalRandom r = ThreadLocalRandom.current();
+            app.onEvent(Event.ACTION.ordinal(), Action.RACE_CHOICE.ordinal(),uid,r.nextBoolean()+"");
+        };
+        for (String uid : app.getJoinedUsers()) {
+            out.println("roles,"+app.getRoles());
+            if(random){
+                randomAction.accept(uid);
+                continue;
+            }
+            outer:
+            while(true){
+                out.println("please choice "+uid+" hands true/false/random/quit");
+                line = s.nextLine().trim();
+                switch (line){
+                    case "true","false"->{
+                        app.onEvent(Event.ACTION.ordinal(), Action.RACE_CHOICE.ordinal(),uid,line);
+                        break outer;
+                    }
+                    case "random"-> {
+                        randomAction.accept(uid);
+                        random=true;
+                        break outer;
+                    }
+                    case "quit"-> System.exit(0);
+                    default -> out.println("invalid input:"+line);
+                }
+            }
+        }
+        app.onTick(0.1f);
     }
     public void onRacingSpeeching(){
         Minor m = app.minor();
@@ -101,6 +134,7 @@ public class WolfAutoTest {
     }
     public void onTalking(){
         app.onEvent(Event.ACTION.ordinal(), Action.TEST_DONE.ordinal());//voting begin.
+        app.onTick(0.1f);//talking phaser begin
     }
     public void onVoting(){
         app.onEvent(Event.ACTION.ordinal(), Action.TEST_DONE.ordinal());
@@ -118,28 +152,42 @@ public class WolfAutoTest {
     public WolfAutoTest init(){
         return this;
     }
+    protected void tick(){
+        WolfAutoTest.yield();
+        switch (app.cur().state()){
+            case PREPARING -> onPreparingInput();
+            case WOLF -> onWolfInput();
+            case WITCH -> onWitchInput();
+            case PREDICTOR -> onPredictorInput();
+            case RACE -> onRacingInput();
+            case CALC_DIED -> onCalcDied();
+            case DIED_INFO ->onDiedInfo();
+            case ORDERING -> onOrdering();
+            case TALKING -> onTalking();
+            case VOTING -> onVoting();
+            case PROTECTOR -> onProtectorInput();
+            case LAST_WORDS -> onLastWords();
+            case HUNTER -> onHunterInput();
+            case DONE -> onDone();
+            case OVER -> onOver();
+        }
+    }
+    public void onOver(){
+        app.onTick(0.1f);
+    }
+    public void onDone() {
+        app.onTick(0.1f);
+        out.println("game done last access");
+    }
     public void run(){
         start = app.now();
         while(!app.isGameOver()){
-            WolfAutoTest.yield();
-            switch (app.cur().state()){
-                case PREPARING -> onPreparingInput();
-                case WOLF -> onWolfInput();
-                case WITCH -> onWitchInput();
-                case PREDICTOR -> onPredictorInput();
-                case RACE -> onRacingInput();
-                case CALC_DIED -> onCalcDied();
-                case DIED_INFO ->onDiedInfo();
-                case ORDERING -> onOrdering();
-                case TALKING -> onTalking();
-                case VOTING -> onVoting();
-                case PROTECTOR -> onProtectorInput();
-                case LAST_WORDS -> onLastWords();
-                case HUNTER -> onHunterInput();
-            }
+           tick();
         }
+        app.onDestroy();
+        out.println("game run done");
     }
-    static void yield(){
+    public static void yield(){
         sleep1();
     }
     public static void sleep1(){

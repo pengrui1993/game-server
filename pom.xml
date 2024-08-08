@@ -32,6 +32,7 @@
     <module>common/model-poker-card</module>
     <module>common/event-netty-impl</module>
     <module>common/server-support</module>
+      <module>tester</module>
   </modules>
 
     <properties>

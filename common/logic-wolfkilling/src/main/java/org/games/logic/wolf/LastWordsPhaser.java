@@ -46,6 +46,12 @@ class LastWordsPhaser extends MajorPhaser {
     }
 
     @Override
+    public void end() {
+        ctx.get(diedUserId).goDied();
+        out.println("last word end,died "+diedUserId);
+    }
+
+    @Override
     public void update(float dt) {
         last+=dt;
         if(last>=limit||test||requestCancel){

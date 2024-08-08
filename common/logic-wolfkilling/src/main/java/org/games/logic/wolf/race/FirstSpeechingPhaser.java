@@ -74,11 +74,11 @@ class FirstSpeechingPhaser extends MinorPhaser{
         ThreadLocalRandom r = ThreadLocalRandom.current();
         startUser = curUser = raceUp.get(r.nextInt(raceUp.size()));
         talkingCCW = r.nextBoolean();
-        Phaser.out.println("first,current start with counterclockwise:"+talkingCCW);
         last = curLast = 0;
         test = false;
         room = TalkingRoomManager.MGR.create(ctx.top().getJoinedUsers());
         room.active(curUser);
+        out.println("first,current start with counterclockwise:"+talkingCCW);
     }
 
     @Override

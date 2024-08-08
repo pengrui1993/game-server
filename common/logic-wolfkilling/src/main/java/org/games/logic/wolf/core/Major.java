@@ -3,7 +3,14 @@ package org.games.logic.wolf.core;
 public enum Major {
     PREPARING,WOLF,WITCH,PREDICTOR,PROTECTOR, CALC_DIED,RACE,HUNTER
     ,DIED_INFO,LAST_WORDS,ORDERING,TALKING,VOTING
-    ,OVER,DONE
+    ,OVER,DONE;
+
+    public static Major from(int code) {
+        for (Major value : values()) {
+            if(value.ordinal()==code)return value;
+        }
+        return null;
+    }
 }
 /*
 #include<iostream>

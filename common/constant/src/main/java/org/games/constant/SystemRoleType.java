@@ -10,6 +10,8 @@ public enum SystemRoleType {
     ,USERS(Const.USERS_TYPE_ID)
     ,MONITOR(Const.MONITOR_TYPE_ID)
     ;
+    public static final
+    SystemRoleType[] ALL_NODE = {SystemRoleType.AUTH,SystemRoleType.BUS,SystemRoleType.CONFIG,SystemRoleType.GATE,SystemRoleType.LOGICS,SystemRoleType.USERS,SystemRoleType.MONITOR};
     public final int id;
     public final boolean isServerSide;
     SystemRoleType(int id) {

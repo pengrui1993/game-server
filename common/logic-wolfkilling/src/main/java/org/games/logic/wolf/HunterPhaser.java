@@ -40,45 +40,39 @@ class HunterPhaser extends MajorPhaser {
             change.run();
         }
     }
-    protected void onAction(Object...params){
-        if(params.length<1){
-            out.println("hunter action,required more then 1 params");
-            return;
-        }
-        Runnable hunterAction = ()->{
-            if(params.length<2){
-                out.println("hunter action required 2 params");
-                return;
-            }
-            String sender = String.class.cast(params[1]);
-            Role role = ctx.get(sender);
-            if(role.role()!=Roles.HUNTER){
-                out.println("hunter action,must be hunter send action");
-                return;
-            }
-            if(params.length==2){
-                hunter.killedUserId = null;
-                choose = true;
-                out.println("hunter action,cancel kill");
-                return;
-            }
-            hunter.killedUserId = String.class.cast(params[2]);
-            choose = true;
-            out.println("hunter action, kill "+hunter.killedUserId);
-        };
-        switch (Action.from(Integer.class.cast(params[0]))){
-            case TEST_DONE -> {
-                test = true;
-                out.println("hunter phaser test enabled");
-            }
-            case HUNTER_ACTION -> hunterAction.run();
-        }
-    }
     @Override
     public void event(int type, Object... params) {
         switch (Event.from(type)){
-            case NULL -> {}
-            case ACTION -> onAction(params);
+            case NULL -> {out.println("hunter null event");}
+            case ACTION -> {
+                if(params.length<1){
+                    out.println("hunter action,required more then 1 params");
+                    return;
+                }
+                switch (Action.from(Integer.class.cast(params[0]))){
+                    case TEST_DONE -> {
+                        test = true;
+                        out.println("hunter phaser test enabled");
+                    }
+                    case HUNTER_ACTION -> {
+                        if(params.length<2){
+                            out.println("hunter action required 2 params");
+                            return;
+                        }
+                        String sender = String.class.cast(params[1]);
+                        Role role = ctx.get(sender);
+                        if(role.role()!=Roles.HUNTER){
+                            out.println("hunter action,must be hunter send action");
+                            return;
+                        }
+                        hunter.killedUserId = params.length>=3
+                                ?String.class.cast(params[2])
+                                :null;
+                        choose = true;
+                        out.println("hunter action, kill "+hunter.killedUserId);
+                    }
+                }
+            }
         }
     }
 }

@@ -7,12 +7,20 @@ public class Farmer implements org.games.logic.wolf.role.Farmer {
     public boolean alive() {
         return lived;
     }
+
+    @Override
+    public boolean goDied() {
+        boolean alreadyDied = !lived;
+        lived = false;
+        return alreadyDied;
+    }
+    private boolean lived;
+
     private final Context ctx;
     public Farmer(Context ctx) {
         this.ctx = ctx;
         lived = true;
     }
-    private boolean lived;
 
     @Override
     public String toString() {

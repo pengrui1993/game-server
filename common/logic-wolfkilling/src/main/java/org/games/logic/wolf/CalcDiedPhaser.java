@@ -5,6 +5,9 @@ import org.games.logic.wolf.role.Roles;
 import org.games.logic.wolf.role.impl.Witch;
 import org.games.logic.wolf.util.CalcContext;
 
+import java.util.Objects;
+import java.util.function.Consumer;
+
 class CalcDiedPhaser extends MajorPhaser {
     @Override
     public Major state() {
@@ -45,7 +48,7 @@ class CalcDiedPhaser extends MajorPhaser {
             }
             if(cc.isProtectSaved()&&cc.isWitchKilled()){
                 out.println("calc,protected and witch-killed");
-                cc.calcDiedUserId = cc.protectedUserId;
+                cc.calcDiedUserId = Objects.equals(cc.protectedUserId,cc.killingTargetUserId)?null:cc.killingTargetUserId;
                 cc.calcDiedUserIdByWitch = cc.drugKilledUserId;
                 ctx.get(Roles.WITCH).castTo(Witch.class).drug = false;
                 break label;
@@ -54,6 +57,13 @@ class CalcDiedPhaser extends MajorPhaser {
                 out.println("calc,protected and none witch-killed");
                 cc.calcDiedUserId = cc.protectedUserId;
                 cc.calcDiedUserIdByWitch = null;
+                break label;
+            }
+            if(!cc.isProtectSaved()&&cc.isWitchKilled()){
+                out.println("calc,no protected and witch-killed");
+                cc.calcDiedUserId = cc.killingTargetUserId;
+                cc.calcDiedUserIdByWitch = cc.drugKilledUserId;
+                ctx.get(Roles.WITCH).castTo(Witch.class).drug = false;
                 break label;
             }
             if(cc.isWitchSaved()&&!cc.isProtectSaved()){
@@ -67,7 +77,27 @@ class CalcDiedPhaser extends MajorPhaser {
             cc.calcDiedUserId = cc.killingTargetUserId;
             cc.calcDiedUserIdByWitch = null;
         }
-        ctx.changeState(new PublishDiedInfoPhaser(ctx));
+        Consumer<String> goDied = (died)->{
+            if(Objects.nonNull(died)){
+                ctx.get(died).goDied();
+                if(cc.isWolfWitchKillSame()){
+                    ctx.deadInfo.addDiedInfoByWolfWitch(died,ctx.day());
+                    return;
+                }
+                if(Objects.equals(cc.calcDiedUserId,died)){
+                    ctx.deadInfo.addDiedInfoByWolf(died,ctx.day());
+                    return;
+                }
+                if(cc.isDoubleSaved()){
+                    ctx.deadInfo.addDiedInfoByProtector(died,ctx.day());
+                }else{
+                    ctx.deadInfo.addDiedInfoByWitch(died,ctx.day());
+                }
+            }
+        };
+        goDied.accept(cc.calcDiedUserId);
+        goDied.accept(cc.calcDiedUserIdByWitch);
+        ctx.changeState(ctx.anyTeamWinner()?new OverPhaser(ctx):new PublishDiedInfoPhaser(ctx));
     }
     @Override
     public void begin() {

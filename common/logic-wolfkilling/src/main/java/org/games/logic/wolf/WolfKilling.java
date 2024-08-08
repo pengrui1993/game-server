@@ -2,16 +2,12 @@ package org.games.logic.wolf;
 
 import org.games.logic.wolf.core.*;
 import org.games.logic.wolf.core.Minor;
-import org.games.logic.wolf.role.NoneRole;
-import org.games.logic.wolf.role.Role;
-import org.games.logic.wolf.role.Roles;
-import org.games.logic.wolf.util.CalcContext;
-import org.games.logic.wolf.util.ConnectionHandler;
-import org.games.logic.wolf.util.RaceInfo;
-import org.games.logic.wolf.util.Setting;
+import org.games.logic.wolf.role.*;
+import org.games.logic.wolf.util.*;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 
 import static org.games.logic.wolf.core.Context.*;
 /*
@@ -30,14 +26,17 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
     @Final
     Map<String, Role> roles=new HashMap<>();
     boolean gameDone = false;
+    Team winner = Team.NIL;
     public final Setting setting = new Setting();
     int curDayTalkingTimes;
     int dayNumber;
     private ConnectionHandler connHandler;
     final CalcContext calcCtx = new CalcContext();
     public final RaceInfo raceInfo = new RaceInfo();
+    public final DeadInfo deadInfo = new DeadInfo();
     boolean talkingOrderingCCW;
     private final Map<Roles,String> singleRolesId = new HashMap<>();
+    public @Final SessionInterface sessions = SessionInterface.dummy;
     @Final
     String sergeant;
     public WolfKilling(String id,String creator){
@@ -84,8 +83,15 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
     }
     @Override
     public void onEvent(int cmd, Object... params) {
-        if(cmd==Event.CONNECTION.ordinal())connHandler.handle(params);
-        if(cmd==Event.CONFIG.ordinal())setting.change(params);
+        switch (Event.from(cmd)){
+            case NULL -> cur().out.println("room null event");
+            case CONNECTION -> connHandler.handle(params);
+            case CONFIG -> setting.change(params);
+            case ACTION -> {
+                if(params.length<1)break;
+
+            }
+        }
         Context.super.onEvent(cmd, params);
     }
     @Override
@@ -97,6 +103,13 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
         assert null!=s;
         this.cur = s;
     }
+
+    @Override
+    public void changeState(MajorPhaser next) {
+        sessions.notifyStateChange(getRoles(),cur.state(),next.state());
+        Context.super.changeState(next);
+    }
+
     @Write
     public void putRole(Roles r, String uid) {
         if(cur.getClass()== PreparingPhaser.class){
@@ -104,6 +117,10 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
         }else{
             cur.out.println("ignore put , must be preparing phaser do that");
         }
+    }
+    @Write
+    public void setGameOver(){
+        gameDone = true;
     }
     @Read
     public String getId(Roles role){
@@ -132,6 +149,22 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
                 .filter(e->e.getValue().role()== Roles.WOLF&&e.getValue().alive())
                 .map(Map.Entry::getKey)
                 .toList();
+    }
+    private List<String> aliveByType(RoleType t){
+        return roles.entrySet()
+                .stream()
+                .filter(e->e.getValue().role().type==t)
+                .filter(e->e.getValue().alive())
+                .map(Map.Entry::getKey)
+                .toList();
+    }
+    @Read
+    public List<String>aliveFramer(){
+        return aliveByType(RoleType.FRM);
+    }
+    @Read
+    public List<String>aliveHero(){
+        return aliveByType(RoleType.HEO);
     }
     @Read
     public List<String> lived() {
@@ -165,6 +198,31 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
     public int day(){
         return dayNumber;
     }
+    @Read
+    public boolean teamAllDied(Team team) {
+        return roles.values()
+                .stream()
+                .filter(Role::alive)
+                .map(Role::role)
+                .filter(f -> f.team == team)
+                .toList().isEmpty();
+    }
+    @Read
+    public boolean typeAllDied(RoleType type) {
+        return roles.values()
+                .stream()
+                .filter(Role::alive)
+                .map(Role::role)
+                .filter(f -> f.type == type)
+                .toList().isEmpty();
+    }
+
+    @Read
+    public boolean anyTeamWinner() {
+        return typeAllDied(RoleType.FRM)
+                || typeAllDied(RoleType.HEO)
+                || typeAllDied(RoleType.WLF);
+    }
     static final Queue<Runnable> queue = new LinkedList<>();
     static final WolfKilling k = new WolfKilling(UUID.randomUUID().toString(),"user1");
     static long last;
@@ -184,104 +242,115 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
             }
         }else queue.offer(WolfKilling::loop);
     }
+    final Runnable recursive = ()-> {
+        Consumer<Class<? extends MajorPhaser>> debugClass = (c)->{
+            if (now0() - start >= 1000) {
+                if (c != k.cur().getClass()) {
+                    k.gameDone = true;
+                    return;
+                }
+                queue.offer(this.recursive);
+            }else queue.offer(this.recursive);
+        };
+        debugClass.accept(WolfPhaser.class);
+    };
 
+   static List<Runnable> o = List.of(
+            () -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user1")
+            ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user2")
+            ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user3")
+            ,() -> k.onEvent(Event.ACTION.ordinal(), Action.LEFT.ordinal(),"user4")
+            ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user4")
+            ,() -> k.onEvent(Event.ACTION.ordinal(), Action.START_GAME.ordinal(),"user1")
+            ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user5")
+            ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user6")
+            ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user7")
+            ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user8")
+            ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user9")
+            ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user10")
+            ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user11")
+            ,() -> k.onEvent(Event.ACTION.ordinal(), Action.START_GAME.ordinal(),"user12")
+            ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user12")
+            ,() -> k.onEvent(Event.ACTION.ordinal(), Action.START_GAME.ordinal(),"user1")
+            ,() -> {// wolf kill emulate
+                ThreadLocalRandom r = ThreadLocalRandom.current();
+                List<String> users = k.joinedUsers;
+                for (String s : k.aliveWolf()) {
+                    k.onEvent(Event.ACTION.ordinal(), Action.WOLF_KILL.ordinal(),s,users.get(r.nextInt(users.size())));
+                }
+            }
+            ,()-> k.onEvent(Event.ACTION.ordinal(), Action.TEST_DONE.ordinal())
+            ,()->{
+                if(k.cur().getClass()!= WitchPhaser.class)return;
+                ThreadLocalRandom r = ThreadLocalRandom.current();
+                Runnable kill = ()->{
+                    List<String> users = k.joinedUsers;
+                    String killed = users.get(r.nextInt(users.size()));
+                    if(r.nextBoolean())
+                        k.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),k.getId(Roles.WITCH),"kill",killed);
+                    else
+                        k.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),k.getId(Roles.WITCH),"cancel");
+                };
+                WitchPhaser wp = WitchPhaser.class.cast(k.cur());
+                switch (wp.state){
+                    case SAVING -> {
+                        if(r.nextBoolean()){
+                            k.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),k.getId(Roles.WITCH),"save");
+                        }else{
+                            k.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),k.getId(Roles.WITCH),"cancel");
+                            kill.run();
+                        }
+                    }
+                    case KILLING -> kill.run();
+                }
+            }
 
+            ,()-> k.onEvent(Event.ACTION.ordinal(),Action.PREDICTOR_ACTION.ordinal(),"user1","user2")
+            ,()->{
+                ThreadLocalRandom r = ThreadLocalRandom.current();
+                String preId = k.getId(Roles.PREDICTOR);
+                String anyOneButNotPre;
+                while(!Objects.equals(preId,anyOneButNotPre=k.joinedUsers.get(r.nextInt(k.joinedUsers.size()))));
+                k.onEvent(Event.ACTION.ordinal(),Action.PREDICTOR_ACTION.ordinal(),preId,anyOneButNotPre);
+            }
+            ,()-> k.onEvent(Event.ACTION.ordinal(),Action.RACE_CHOICE.ordinal(),"123","true")
+            ,()-> k.onEvent(Event.ACTION.ordinal(),Action.RACE_CHOICE.ordinal(),"user1","true")
+            ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//HandsUpPhaser
+            ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//FirstRacingPhaser
+            ,()-> k.onEvent(Event.ACTION.ordinal(),Action.RACE_VOTE.ordinal(),"123","user1")
+            ,()-> k.onEvent(Event.ACTION.ordinal(),Action.RACE_VOTE.ordinal(),"user1","user1")
+            ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//race.VotingPhaser
+            ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//SecondRacingPhaser
+            ,()-> k.onEvent(Event.ACTION.ordinal(),Action.RACE_VOTE.ordinal(),"user2","user1")
+            ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//race.VotingPhaser
+            ,()->{}//noop for race.done
+            ,()-> {if(k.cur.getClass()==PublishDiedInfoPhaser.class)
+                k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//PublishDiedInfoPhaser
+            ,()-> {if(k.cur.getClass()==LastWordsPhaser.class)
+                k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//LastWordsPhaser
+            ,()-> {if(k.cur.getClass()==OrderingPhaser.class)
+                k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//OrderingPhaser
+            ,()-> {if(k.cur.getClass()==TalkingPhaser.class)
+                k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//TalkingPhaser
+            ,()-> {if(k.cur.getClass()==VotingPhaser.class)
+                k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//VotingPhaser
+            ,()-> {if(k.cur.getClass()==TalkingPhaser.class)
+                k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//TalkingPhaser
+            ,()->{}
+            ,()-> {if(k.cur.getClass()== VotingPhaser.class)
+                k.onEvent(Event.ACTION.ordinal(),Action.VOTING_VOTE.ordinal(),"user1","user2");}
+            ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//VotingPhaser
+            ,()-> {if(k.cur.getClass()== LastWordsPhaser.class)
+                k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//LastWordsPhaser
+            ,()-> {if(k.cur.getClass()== OrderingPhaser.class)
+                k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//OrderingPhaser
+            ,()-> {if(k.cur.getClass()==TalkingPhaser.class)
+                k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//TalkingPhaser
+
+            ,WolfKilling::loop
+    );
 
     public static void main(String[] args) {
-        List<Runnable> o = List.of(
-                () -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user1")
-                ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user2")
-                ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user3")
-                ,() -> k.onEvent(Event.ACTION.ordinal(), Action.LEFT.ordinal(),"user4")
-                ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user4")
-                ,() -> k.onEvent(Event.ACTION.ordinal(), Action.START_GAME.ordinal(),"user1")
-                ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user5")
-                ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user6")
-                ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user7")
-                ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user8")
-                ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user9")
-                ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user10")
-                ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user11")
-                ,() -> k.onEvent(Event.ACTION.ordinal(), Action.START_GAME.ordinal(),"user12")
-                ,() -> k.onEvent(Event.ACTION.ordinal(), Action.JOIN.ordinal(),"user12")
-                ,() -> k.onEvent(Event.ACTION.ordinal(), Action.START_GAME.ordinal(),"user1")
-                ,() -> {// wolf kill emulate
-                    ThreadLocalRandom r = ThreadLocalRandom.current();
-                    List<String> users = k.joinedUsers;
-                    for (String s : k.aliveWolf()) {
-                        k.onEvent(Event.ACTION.ordinal(), Action.WOLF_KILL.ordinal(),s,users.get(r.nextInt(users.size())));
-                    }
-                }
-                ,()-> k.onEvent(Event.ACTION.ordinal(), Action.TEST_DONE.ordinal())
-                ,()->{
-                    if(k.cur().getClass()!= WitchPhaser.class)return;
-                    ThreadLocalRandom r = ThreadLocalRandom.current();
-                    Runnable kill = ()->{
-                        List<String> users = k.joinedUsers;
-                        String killed = users.get(r.nextInt(users.size()));
-                        if(r.nextBoolean())
-                            k.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),k.getId(Roles.WITCH),"kill",killed);
-                        else
-                            k.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),k.getId(Roles.WITCH),"cancel");
-                    };
-                    WitchPhaser wp = WitchPhaser.class.cast(k.cur());
-                    switch (wp.state){
-                        case SAVING -> {
-                            if(r.nextBoolean()){
-                                k.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),k.getId(Roles.WITCH),"save");
-                            }else{
-                                k.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),k.getId(Roles.WITCH),"cancel");
-                                kill.run();
-                            }
-                        }
-                        case KILLING -> kill.run();
-                    }
-                }
-
-                ,()-> k.onEvent(Event.ACTION.ordinal(),Action.PREDICTOR_ACTION.ordinal(),"user1","user2")
-                ,()->{
-                    ThreadLocalRandom r = ThreadLocalRandom.current();
-                    String preId = k.getId(Roles.PREDICTOR);
-                    String anyOneButNotPre;
-                    while(!Objects.equals(preId,anyOneButNotPre=k.joinedUsers.get(r.nextInt(k.joinedUsers.size()))));
-                    k.onEvent(Event.ACTION.ordinal(),Action.PREDICTOR_ACTION.ordinal(),preId,anyOneButNotPre);
-                }
-                ,()-> k.onEvent(Event.ACTION.ordinal(),Action.RACE_CHOICE.ordinal(),"123","true")
-                ,()-> k.onEvent(Event.ACTION.ordinal(),Action.RACE_CHOICE.ordinal(),"user1","true")
-                ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//HandsUpPhaser
-                ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//FirstRacingPhaser
-                ,()-> k.onEvent(Event.ACTION.ordinal(),Action.RACE_VOTE.ordinal(),"123","user1")
-                ,()-> k.onEvent(Event.ACTION.ordinal(),Action.RACE_VOTE.ordinal(),"user1","user1")
-                ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//race.VotingPhaser
-                ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//SecondRacingPhaser
-                ,()-> k.onEvent(Event.ACTION.ordinal(),Action.RACE_VOTE.ordinal(),"user2","user1")
-                ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//race.VotingPhaser
-                ,()->{}//noop for race.done
-                ,()-> {if(k.cur.getClass()==PublishDiedInfoPhaser.class)
-                    k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//PublishDiedInfoPhaser
-                ,()-> {if(k.cur.getClass()==LastWordsPhaser.class)
-                    k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//LastWordsPhaser
-                ,()-> {if(k.cur.getClass()==OrderingPhaser.class)
-                    k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//OrderingPhaser
-                ,()-> {if(k.cur.getClass()==TalkingPhaser.class)
-                    k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//TalkingPhaser
-                ,()-> {if(k.cur.getClass()==VotingPhaser.class)
-                    k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//VotingPhaser
-                ,()-> {if(k.cur.getClass()==TalkingPhaser.class)
-                    k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//TalkingPhaser
-                ,()->{}
-                ,()-> {if(k.cur.getClass()== VotingPhaser.class)
-                        k.onEvent(Event.ACTION.ordinal(),Action.VOTING_VOTE.ordinal(),"user1","user2");}
-                ,()-> k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal())//VotingPhaser
-                ,()-> {if(k.cur.getClass()== LastWordsPhaser.class)
-                    k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//LastWordsPhaser
-                ,()-> {if(k.cur.getClass()== OrderingPhaser.class)
-                    k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//OrderingPhaser
-                ,()-> {if(k.cur.getClass()==TalkingPhaser.class)
-                    k.onEvent(Event.ACTION.ordinal(),Action.TEST_DONE.ordinal());}//TalkingPhaser
-
-                ,WolfKilling::loop
-        );
         queue.addAll(o);
         System.out.println(now0());
         while(!k.isGameOver()){
@@ -299,6 +368,13 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
         k.onDestroy();
         System.out.println(now0());
     }
+
+    @Override
+    public void onDestroy() {
+        cur().out.println("winner:"+winner);
+        Context.super.onDestroy();
+    }
+
     public void setSergeant(String sergeant) {
         if(cur.getClass()== RacingPhaser.class){
             this.sergeant = sergeant;
@@ -324,4 +400,5 @@ public class WolfKilling implements Context<Major,MajorPhaser,WolfKilling> {
     public String curSpeaker(){
         return cur.speaker();
     }
+
 }

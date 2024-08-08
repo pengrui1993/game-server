@@ -49,8 +49,6 @@ public class CalcContext {
     public boolean isTargetDied() {
         return Objects.nonNull(calcDiedUserId);
     }
-
-
     public boolean isProtectSaved() {
         return !isWolfEmptyKilling()
                 &&Objects.nonNull(protectedUserId)
@@ -66,8 +64,11 @@ public class CalcContext {
                 &&!Objects.equals(medicineSavedUserId,protectedUserId)
                 ;
     }
-
     public boolean isWitchKilled() {
         return Objects.nonNull(drugKilledUserId);
+    }
+
+    public boolean isWolfWitchKillSame() {
+        return isTargetDied()&&Objects.equals(calcDiedUserId,calcDiedUserIdByWitch);
     }
 }

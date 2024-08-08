@@ -3,6 +3,18 @@ package org.games.logic.wolf.role.impl;
 import org.games.logic.wolf.core.Context;
 
 public class Witch implements org.games.logic.wolf.role.Witch {
+    @Override
+    public boolean alive() {
+        return lived;
+    }
+
+    @Override
+    public boolean goDied() {
+        boolean alreadyDied = !lived;
+        lived = false;
+        return alreadyDied;
+    }
+    private boolean lived;
     private final Context ctx;
     public boolean drug;
     public boolean medicine;
@@ -10,12 +22,6 @@ public class Witch implements org.games.logic.wolf.role.Witch {
         this.ctx = ctx;
         this.lived =drug=medicine= true;
     }
-    private boolean lived;
-    @Override
-    public boolean alive() {
-        return lived;
-    }
-
     @Override
     public boolean hasDrug() {
         return drug;

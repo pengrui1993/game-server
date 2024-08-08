@@ -8,8 +8,10 @@ public class WolfBombUtil {
 
     public static boolean handle(WolfKilling ctx, String bomb){
         if(!ctx.aliveWolf().contains(bomb))return false;
-        ctx.get(bomb).castTo(Wolf.class).lived=false;
+        if(!ctx.get(bomb).castTo(Wolf.class).goDied())
+            ctx.cur().out.println("warning:already died about:"+bomb);
         ctx.changeState(ctx.newWolfPhaser());
+        ctx.deadInfo.addDiedInfoByWolfBomb(bomb,ctx.day());
         return true;
     }
 }

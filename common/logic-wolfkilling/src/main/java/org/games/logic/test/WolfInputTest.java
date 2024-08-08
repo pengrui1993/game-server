@@ -1,9 +1,9 @@
 package org.games.logic.test;
 
+import org.games.logic.wolf.WolfKilling;
 import org.games.logic.wolf.core.Action;
 import org.games.logic.wolf.core.Event;
 import org.games.logic.wolf.role.*;
-
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -18,6 +18,60 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class WolfInputTest extends WolfAutoTest{
+    @Override
+    public void onHunterInput() {
+        AtomicBoolean auto = new AtomicBoolean(autoHunterInput);
+        ThreadLocalRandom r = ThreadLocalRandom.current();
+        String hunter = app.getId(Roles.HUNTER);
+        if(auto.get()){
+            List<String> lived = app.lived();
+            String target;
+            while(Objects.equals((target=r.nextBoolean()?null:lived.get(r.nextInt(lived.size()))),hunter)){
+                out.println("cannot choose itself");
+            }
+            app.onEvent(Event.ACTION.ordinal(),Action.HUNTER_ACTION.ordinal(),hunter,target);
+            app.onTick(0.1f);
+            return;
+        }
+        super.onHunterInput();//TODO
+    }
+
+    private void lastWordsPass(){
+        super.onLastWords();
+    }
+    @Override
+    public void onLastWords() {
+        AtomicBoolean auto = new AtomicBoolean(autoLastWords);
+        ThreadLocalRandom r = ThreadLocalRandom.current();
+        Runnable random = ()->{
+            if(r.nextBoolean())lastWordsPass();
+            else app.onTick(0.1f+app.setting.lastWordsActionTimeoutLimit);//[wolf phaser begin|]
+        };
+        if(auto.get()){
+            random.run();
+            return;
+        }
+        outer:
+        while(!auto.get()){
+            out.println("last words action [pass/timeout]:");
+            line = s.nextLine().trim();
+            switch (line){
+                case "pass"->{
+                    lastWordsPass();
+                    break outer;
+                }
+                case "timeout"->{
+                    app.onTick(0.1f+app.setting.lastWordsActionTimeoutLimit);//[wolf phaser begin|]
+                    break outer;
+                }
+                case "auto"->auto.set(true);
+                case "quit"->System.exit(0);
+                default -> out.println("invalid cmd:"+line);
+            }
+        }
+        if(auto.get())random.run();
+        app.onTick(0.1f);
+    }
 
     @Override
     public void onVoting() {
@@ -26,14 +80,18 @@ public class WolfInputTest extends WolfAutoTest{
         Runnable gen = ()->{
             ThreadLocalRandom r = ThreadLocalRandom.current();
             app.lived().stream().filter(e->!voted.contains(e)).forEach(u->{
-                List<String> lived = app.lived();
-                String target = lived.get(r.nextInt(lived.size()));
+                List<String> list = app.lived();
+                String target = r.nextBoolean()?null:list.get(r.nextInt(list.size()));
                 app.onEvent(Event.ACTION.ordinal(),Action.VOTING_VOTE.ordinal(),u,target);
+                voted.add(u);
             });
         };
         if(auto.get()){
             gen.run();
-        }else while(!auto.get()&&voted.size()!=app.lived().size()){
+            app.onTick(0.1f);
+            return;
+        }
+        while(!auto.get()&&voted.size()!=app.lived().size()){
             app.lived().stream().filter(e->!voted.contains(e)).forEach(u->{
                 if(auto.get())return;
                 out.println(u+" select voting target from:"+app.lived());
@@ -51,13 +109,14 @@ public class WolfInputTest extends WolfAutoTest{
                     }
                 }
             });
-            if(auto.get()){
-                gen.run();
-            }
         }
+        if(auto.get())gen.run();
         app.onTick(0.1f+app.setting.votingLimit);
     }
-
+    @Override
+    public void onProtectorInput() {
+        super.onProtectorInput();//TODO
+    }
     @Override
     public void onWolfInput() {
         AtomicBoolean auto = new AtomicBoolean(autoWolfInput);
@@ -71,7 +130,10 @@ public class WolfInputTest extends WolfAutoTest{
         });
         if(auto.get()){
             gen.run();
-        }else while(!auto.get()&&app.aliveWolf().size()!=wolfs.size()){
+            app.onTick(0.1f);
+            return;
+        }
+        while(!auto.get()&&app.aliveWolf().size()!=wolfs.size()){
             app.aliveWolf().forEach(w->{
                 if(auto.get())return;
                 out.println("please enter,killing target[userId],your are:"+w);
@@ -99,81 +161,131 @@ public class WolfInputTest extends WolfAutoTest{
 
     @Override
     public void onWitchInput() {
+        boolean killed = Objects.nonNull(app.curWolfTarget());
         Witch witch = app.get(Roles.WITCH, Witch.class);
-        String id = app.getId(Roles.WITCH);
-        AtomicBoolean auto = new AtomicBoolean(autoWitchInput);
-        if(witch.hasMedicine()&&app.wolfKilled()){
-            out.println("please enter,[cancel] or [save]");
-            line = s.nextLine().trim();
-            outer:
-            while(true){
-                switch (line){
-                    case "cancel"-> {
-                        app.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),id,"cancel");
-                        break outer;
-                    }
-                    case "save"->{
-                        app.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),id,"save");
-                        app.onTick(0.1f);
-                        out.println(app.cur().getClass());
-                        return;
-                    }
-                    default -> out.println("unknown command "+line);
-                }
-            }
-        }
-        app.onTick(0.1f);
-        if(witch.hasDrug()){
-            out.println("please enter,[cancel] or [kill userId] or [help]");
-            line = s.nextLine().trim();
-            while(true){
-                switch (line){
-                    case "help"-> out.println(app.getRoles());
-                    case "cancel"->{
-                        app.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),id,"cancel");
-                        app.onTick(0.1f);
-                        out.println(app.cur().getClass());
-                        return;
-                    }
-                    default ->{
-                        if(line.startsWith("kill ")){
-                            String who = line.split("kill ")[1];
-                            if(!app.get(who).alive()){
-                                out.println("invalid kill target");
-                                continue;
-                            }
-                            app.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),id,"kill",who);
-                            app.onTick(0.1f);
-                            out.println(app.cur().getClass());
-                            return;
-                        }else{
-                            out.println("unknown command "+line);
-                        }
-                    }
-                }
-            }
+        if(!killed&&!witch.hasDrug()){
+            out.println("no killed in wolf and no drug, ignore witch input");
+            return;
         }
         ThreadLocalRandom r = ThreadLocalRandom.current();
+        String id = app.getId(Roles.WITCH);
+        AtomicBoolean auto = new AtomicBoolean(autoWitchInput);
         boolean first = app.day()<1;
-        boolean killed = Objects.nonNull(app.curWolfTarget());
-        Runnable randomSaving = ()->{
-            if(r.nextBoolean())app.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),id,"save");
-            else app.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),id,"cancel");
+        final AtomicBoolean cancel = new AtomicBoolean(false);
+        final AtomicBoolean done = new AtomicBoolean(false);
+        Runnable doSave = ()->{
+            app.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),id,"save");
+            done.set(true);
         };
-        if(auto.get()){
-            if(first&&killed){
+        Runnable doCancel = ()->{
+            app.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),id,"cancel");
+            if(first)done.set(true);
+            if(cancel.get())done.set(true);
+            cancel.set(true);
+        };
+        Consumer<String> doKill = (target)->{
+            app.onEvent(Event.ACTION.ordinal(), Action.WITCH_ACTION.ordinal(),id,"kill",target);
+            done.set(true);
+        };
+        Runnable randomSaving = ()->{
+            (r.nextBoolean()?doSave:doCancel).run();
+            app.onTick(0.1f);
+        };
+        Runnable randomKilling= ()-> {
+            String target = app.lived().get(r.nextInt(app.lived().size()));
+            Runnable k = ()->doKill.accept(target);
+            (r.nextBoolean()?k:doCancel).run();
+            app.onTick(0.1f);
+        };
+        Runnable autoRun = ()->{
+//            boolean noFirstCanSave = !first&&killed&&witch.hasMedicine();
+//            boolean noFirstNoSave = !first&&(!killed||!witch.hasMedicine());
+//            boolean firstCanSave = first&&killed;
+//            if(firstCanSave)randomSaving.run();
+//            if(noFirstCanSave)randomSaving.run();
+//            if(noFirstNoSave)randomKilling.run();
+//            if(cancel.get()&&witch.hasDrug())randomKilling.run();
+
+            if(cancel.get()&&witch.hasDrug()){randomKilling.run();return;}
+            if(first&&killed)randomSaving.run();
+            if(witch.hasMedicine()&&killed){
                 randomSaving.run();
+                if(cancel.get()&&witch.hasDrug()){randomKilling.run();}
+            }else if(!first&&witch.hasDrug()){
+                randomKilling.run();
             }else{
-                if(witch.hasMedicine()&&killed){
-                    randomSaving.run();
-                }else if(witch.hasDrug()){
-
-                }
+                out.println("invalid state witch phaser must have any drug");
             }
-        }else while(true){
-
+            out.println(app.cur().getClass());//show be phaser change
+        };
+        Runnable drugInput = ()->{
+            label1:
+            while(true){
+                out.println("witch phaser,do you want killing anyone? [yes/no]");
+                switch (line=s.nextLine().trim()){
+                    case "no"-> doCancel.run();
+                    case "yes"->{
+                        label2:
+                        while(true){
+                            out.println("enter you want to killed id:"+app.lived());
+                            String uid =line= s.nextLine().trim();
+                            if(app.lived().contains(uid)){
+                                out.println("invalid user id:"+uid);
+                                doKill.accept(uid);
+                                break;
+                            }
+                            switch (line){
+                                case "no"->{doCancel.run();break label2;}
+                                case "kill"->{continue label1;}
+                                case "quit"->System.exit(0);
+                                case "auto"->doKill.accept(app.lived().get(r.nextInt(app.lived().size())));
+                            }
+                            break;
+                        }
+                    }
+                    case "auto"-> doKill.accept(app.lived().get(r.nextInt(app.lived().size())));
+                    case "quit"->System.exit(0);
+                    default -> {out.println("invalid cmd"+line);continue;}
+                }
+                app.onTick(0.1f);
+                break;
+            }
+        };
+        Runnable savingInput = ()->{
+            boolean needToInput = witch.hasMedicine()&&killed;
+            if(!needToInput)return;
+            out.println("witch phaser,someone maybe died,do you want saving anyone? [yes/no]");
+            switch (line= s.nextLine().trim()){
+                case "quit"->System.exit(0);
+                case "auto"->{auto.set(true);return;}
+                case "yes"-> doSave.run();
+                case "no"-> doCancel.run();
+                default -> {out.println("invalid cmd"+line);return;}
+            }
+            app.onTick(0.1f);
+        };
+        Supplier<Boolean> tryAuto = ()->{
+            if(done.get())return true;
+            if(auto.get()) {
+                autoRun.run();
+                app.onTick(0.1f);
+                return true;
+            }
+            return false;
+        };
+        Supplier<Boolean> savingThenTryAuto = ()->{
+            savingInput.run();
+            return tryAuto.get();
+        };
+        if(tryAuto.get())return;
+        while(!auto.get()&&!done.get()){
+            if(first&&killed&&savingThenTryAuto.get())return;
+            boolean noFirstCanSave = !first&&killed&&witch.hasMedicine();
+            boolean noSaveCanKill = !first||!killed||!witch.hasMedicine();
+            if(noFirstCanSave&&savingThenTryAuto.get())return;
+            if(noFirstCanSave&&cancel.get()&&witch.hasDrug()
+                    ||(noSaveCanKill&&witch.hasDrug()))drugInput.run();
         }
-        app.onTick(0.1f);
     }
     @Override
     public void onPredictorInput() {
@@ -186,9 +298,12 @@ public class WolfInputTest extends WolfAutoTest{
         };
         if(auto.get()){
             gen.run();
-        }else while(true){
-            if(auto.get())break;
-            out.println("please choose a uid for validation [userId],predictor uid:"+predictor);
+            app.onTick(0.1f);
+            return;
+        }
+        outer:
+        while(!auto.get()){
+            out.println("predicate choose [userId] to valid,predictor uid:"+predictor);
             line=s.nextLine().trim();
             switch (line){
                 case "quit"->System.exit(0);
@@ -200,47 +315,16 @@ public class WolfInputTest extends WolfAutoTest{
                     }
                     String target = line;
                     app.onEvent(Event.ACTION.ordinal(),Action.PREDICTOR_ACTION.ordinal(),predictor,target);
+                    break outer;
                 }
             }
-            break;
         }
         if(auto.get())gen.run();
         app.onTick(0.1f);
     }
-
     @Override
     public void onRacingHands() {
-        boolean random = false;
-        Consumer<String> randomAction = (uid)->{
-            ThreadLocalRandom r = ThreadLocalRandom.current();
-            app.onEvent(Event.ACTION.ordinal(), Action.RACE_CHOICE.ordinal(),uid,r.nextBoolean()+"");
-        };
-        for (String uid : app.getJoinedUsers()) {
-            out.println("roles,"+app.getRoles());
-            if(random){
-                randomAction.accept(uid);
-                continue;
-            }
-            outer:
-            while(true){
-                out.println("please choice "+uid+" hands true/false/random/quit");
-                line = s.nextLine().trim();
-                switch (line){
-                    case "true","false"->{
-                        app.onEvent(Event.ACTION.ordinal(), Action.RACE_CHOICE.ordinal(),uid,line);
-                        break outer;
-                    }
-                    case "random"-> {
-                        randomAction.accept(uid);
-                        random=true;
-                        break outer;
-                    }
-                    case "quit"-> System.exit(0);
-                    default -> out.println("invalid input:"+line);
-                }
-            }
-        }
-        app.onTick(0.1f);
+        super.onRacingHands();//TODO
     }
     @Override
     public void onRacingVoting() {
@@ -293,9 +377,13 @@ public class WolfInputTest extends WolfAutoTest{
         app.onTick(0.1f);//publish info phaser begin
         app.onTick(app.setting.publishDiedInfoPhaserLimit+0.1f);//ordering phaser
     }
+
+    private void timeoutAutoOrdering(){
+        super.onOrdering();
+    }
     @Override
     public void onOrdering() {
-        if(autoOrdering)super.onOrdering();
+        if(autoOrdering)timeoutAutoOrdering();
         else while(true){
             String uid = app.getSergeant();
             out.println("ordering select ccw [true/false] id:"+uid);
@@ -310,31 +398,60 @@ public class WolfInputTest extends WolfAutoTest{
         app.onTick(0.1f);
     }
     private void dummyHands(){
-        out.println(app.minor());
+        if(Objects.isNull(app.minor())){
+            out.println("invalid hands");
+            return;
+        }else{
+            out.println("dummy hands:"+app.minor());
+        }
         app.onEvent(Event.ACTION.ordinal(), Action.RACE_CHOICE.ordinal(),"user1","true");
         app.onTick(app.setting.handsUpTimeoutLimit+0.1f);
     }
+
+    @Override
+    public void onPreparingInput() {
+        super.onPreparingInput();//TODO
+    }
     @Override
     public WolfAutoTest init() {
-        super.onPreparingInput();
-        super.onWolfInput();
-        super.onWitchInput();
-        super.onPredictorInput();
+        this.onPreparingInput();
+        this.onWolfInput();
+        this.onWitchInput();
+        this.onPredictorInput();
         dummyHands();
         return this;
+    }
+    @Override
+    protected void tick() {
+        super.tick();
     }
     static final boolean autoRacingVoting = true;
     static final boolean autoOrdering = true;
     static final boolean autoVoting = true;
-    static final boolean autoWolfInput = true;
-    static final boolean autoPredictorInput = false;
-    static final boolean autoWitchInput = false;
+    static boolean autoWolfInput = true;
+    static boolean autoPredictorInput = true;
+    static boolean autoWitchInput = false;
+    static boolean autoHunterInput = true;
+    static boolean autoLastWords = true;
     static boolean auto = false;
+
     public static void main(String[] args) {
+        //  boolean noSaveCanKill = !first||!killed||!witch.hasMedicine();
         WolfAutoTest test = auto?new WolfAutoTest(): new WolfInputTest();
         test.init().run();
     }
-
+    public static void main3(String[] args) {
+        Runnable r = null;
+        for(int i=0;i<3;i++){
+            Runnable u = ()->{};
+            System.out.println(r==u);//false,true,true
+            r=u;
+        }
+        Consumer<String[]> c = WolfInputTest::main3;
+        Consumer<String[]> c2 = WolfInputTest::main3;
+        assert r != (Runnable)()->{};
+        System.out.println(c!=c2);//false
+    }
     public static void main0(String[] args) throws Throwable{
         Robot robot = new Robot();
         Thread.sleep(3000);
@@ -349,5 +466,82 @@ public class WolfInputTest extends WolfAutoTest{
         System.out.println(System.in.read());
         System.out.println(System.in.read());
         System.out.println(System.in.read());
+    }
+    static void bits(int n){
+        //System.out.println(-1>>>1);//bit shift
+        int v = n;
+        int d = 0;
+        while(v!=0){
+            v = v >>> 1;
+            d++;
+        }
+        System.out.print(d+",");
+        for(v=n,d=0;v!=0;){
+            v = v >>> 1;
+            d++;
+        }
+        System.out.print(d+" ");
+
+    }
+    static void print(boolean[][] arr){
+        int row,col;
+        for(row=0;row<arr.length;row++){
+            for(col=0;col<arr[row].length;col++){
+                System.out.print(arr[row][col]+" ");
+            }
+            System.out.println();
+        }
+    }
+    static boolean[][] bits2(int bit){
+        bit = Math.min(bit, 32);
+        bit = bit<1?3:bit;//2->4 3->8 4->15
+        int row = 2<<bit;
+        int col = bit;
+        boolean[][] arr = new boolean[row][col];
+        for(row=0;row<(2<<bit);row++){//number to col row
+            int number = row;
+            for(col=0;col<bit;col++){
+                arr[row][col] =  ((number>>>col)&0b01)!=0;
+            }
+        }
+//        print(arr);
+//        System.out.println();
+//        for(row=0;row<arr.length;row++){//col row to number;
+//            for(col=0;col<arr[row].length;col++){
+//                int number= row;
+//                arr[row][col] = ((number>>>col)&0b01)!=0;
+//            }
+//        }
+//        print(arr);
+        return arr;
+    }
+    void bits2(){
+        //        bits(0xf);
+        boolean[][] bs = bits2(3);
+        for(int row=0;row<bs.length;row++){
+            boolean[] bi = bs[row];
+            boolean c1 = bi[0]&&bi[1]&&bi[2];
+            boolean c2 = (!bi[0])||(!bi[1])||(!bi[2]);
+            assert !c1==c2;
+        }
+    }
+    static void bits3(boolean[][] arr){
+        int row,col;
+        for(row=0;row<arr.length;row++){
+            for(col=0;col<arr[row].length;col++){
+                int rowLen = arr[row].length;
+                int val = row*rowLen+col;
+                int t = val;
+                int i=0;
+                while(t!=0){
+                    i++;
+                    if(i==col){
+                        arr[row][col]=0==(t&0x0fe);
+                    }
+                    t>>>=1;
+                }
+                System.out.print(val+" ");
+            }
+        }
     }
 }

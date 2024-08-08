@@ -1,0 +1,13 @@
+usb printer
+httpprinter:
+http://www.httpprinter.com/download_en.html
+
+usb scanner
+https://developer.mozilla.org/en-US/docs/Web/API/Barcode_Detection_API
+
+
+web serial:
+https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API
+
+serial debug:
+serial port analyzer
