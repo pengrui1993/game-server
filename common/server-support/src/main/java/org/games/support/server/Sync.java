@@ -41,7 +41,7 @@ public class Sync {
         running = false;
         interrupter = creator;
         worker.interrupt();
-        System.out.println("interrupted:"+worker.isInterrupted());
+        System.out.println(Sync.class+" interrupted:"+worker.isInterrupted());
         try {
             worker.join();
         } catch (InterruptedException e) {

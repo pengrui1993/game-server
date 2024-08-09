@@ -15,5 +15,5 @@ public interface ProgramContext{
     default <T> void postGets(Class<T> clazz,Consumer<Collection<T>> c){
         post(()-> c.accept(gets(clazz)));
     }
-
+    default boolean isPrepared(){return false;}
 }

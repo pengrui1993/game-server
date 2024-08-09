@@ -13,6 +13,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 
 @SpringBootApplication
@@ -26,7 +27,7 @@ public class App extends AbstractProgram {
         app.addListeners(new ApplicationPidFileWriter());
         ConfigurableApplicationContext ctx = App.ctx = app.run(args);
         App a = ctx.getBean(App.class);
-        a.loop();
+        a.loop(args);
     }
     @Override
     protected boolean handleLine(String line) {
@@ -58,8 +59,8 @@ public class App extends AbstractProgram {
     protected void preDestroy() {
         Runnable r = ()->{};
         try{
-            Net bean = ctx.getBean(Net.class);
-            r = bean::shutdown;
+//            Net bean = ctx.getBean(Net.class);
+//            r = bean::shutdown;
         }catch (Throwable t){
             t.printStackTrace(System.err);
         }

@@ -12,10 +12,24 @@
         brew services start rabbitmq
         /opt/homebrew/sbin/rabbitmqctl enable_feature_flag all
     #endif
+    #web monitor
+    https://www.rabbitmq.com/docs/management
+    http://localhost:15672/
+    username:guest  password:guest
+    #end web monitor
 #end macos
 
-#web monitor
-https://www.rabbitmq.com/docs/management
-http://localhost:15672/
-username:guest  password:guest
-#end web monitor
+
+
+#docker
+    ##info https://stackoverflow.com/questions/47290108/how-to-open-rabbitmq-in-browser-using-docker-container
+    docker run -p 15672:15672 -p 5672:5672 rabbitmq:3-management
+    #web monitor
+        ##simple run:
+        docker run rabbitmq:3
+        ##doc:
+        https://hub.docker.com/_/rabbitmq
+        ##management:
+        http://localhost:15672/
+    #end web monitor
+#end docker

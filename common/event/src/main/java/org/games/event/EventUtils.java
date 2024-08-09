@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.Modifier;
 import java.net.JarURLConnection;
 import java.net.URL;
@@ -15,16 +16,17 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class EventUtils {
-
+    static final PrintStream out = System.out;
+    static final PrintStream err = System.err;
     static int count(String str,char c){
         int n =0;
         for (char c1 : str.toCharArray())if(c1==c)n++;
         return n;
     }
     public static void main(String[] args) throws IOException {
-//        List<Class<? extends F1>> load = load(C1.class, F1.class);
-//        System.out.println(load);
-        System.out.println(classes);
+        List<Class<? extends F1>> load = load(C1.class, F1.class);
+        out.println(load);
+        out.println(classes);
     }
     interface F1{}
     interface F2 extends F1{}
@@ -33,10 +35,18 @@ public class EventUtils {
     static class C2 implements F2{}
     static class C3 implements F1{}
 
+    /**
+     *
+     * @param clazz 搜索范围是该类的package及其子包
+     * @param iface 需要是该接口的可实例化的类
+     * @return 找到 clazz 类所在的package 的所有子包中 实现了 iface接口的 可以实例化的类 并返回
+     * @param <T>
+     * @throws IOException
+     */
     public static <T> List<Class<? extends T>> load(Class<? extends T> clazz, Class<T> iface) throws IOException {
         List<Class<? extends T>> l = new ArrayList<>();
-        Function<Class<?>,Boolean> checker = (p)->{
-            if(p==clazz)return false;
+        final Function<Class<?>,Boolean> checker = (p)->{
+            if(clazz.isInterface()&&p==clazz)return false;
             if(p.isInterface())return false;
             if(Modifier.isAbstract(p.getModifiers())) return false;
             Queue<Class<?>> queue = new LinkedList<>();
@@ -55,15 +65,14 @@ public class EventUtils {
             }
             return false;
         };
-
+        if(checker.apply(clazz))l.add(clazz);
 //        Class<SpringApplication> cc = SpringApplication.class;
 //        print(App.class);//file:/Users/pengrui/gitee/game-server/bus/target/classes/
 //        print(c);//file:/Users/pengrui/.m2/repository/org/springframework/boot/spring-boot/3.3.1/spring-boot-3.3.1.jar
-        Class<?> c = clazz;
-        String pkg = c.getPackage().getName();
+        String pkg = clazz.getPackage().getName();
         String pkgDir = pkg.replaceAll("\\.","/");
         int dirCount = count(pkgDir,'/')+1;
-        URL location = c.getProtectionDomain().getCodeSource().getLocation();
+        URL location = clazz.getProtectionDomain().getCodeSource().getLocation();
         Consumer<JarEntry> jarHandler = (jarEntry)->{
             String name = jarEntry.getName();
             if(name.endsWith(".class")
@@ -75,6 +84,7 @@ public class EventUtils {
                     Class<?> target = Class.forName(cz);
                     if(checker.apply(target)) l.add((Class<? extends T>)target);
                 } catch (ClassNotFoundException e) {
+                    e.printStackTrace(err);
                 }
             }
         };
@@ -109,7 +119,6 @@ public class EventUtils {
                                 return;
                             }
                             if(checker.apply(target)) l.add((Class<? extends T>)target);
-
                         }
                     }
                 });
@@ -122,9 +131,9 @@ public class EventUtils {
                 JarEntry jarEntry = entries.nextElement();
                 jarHandler.accept(jarEntry);
             }
-            System.out.println("exit with jar");
+            out.println("exit with jar");
         }else{
-            System.out.println("unknown protocol:"+protocol);
+            out.println("unknown protocol:"+protocol);
         }
         return l;
     }
@@ -135,8 +144,8 @@ public class EventUtils {
         try {
             classes1 = load(Event.class, Event.class);
         } catch (IOException e) {
-            classes1 = Collections.emptyList();
             System.exit(-1);
+            classes1 = Collections.emptyList();
         }
         classes = classes1;
         GsonBuilder gsonBuilder = new GsonBuilder();

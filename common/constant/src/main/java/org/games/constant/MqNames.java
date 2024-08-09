@@ -10,7 +10,7 @@ public enum MqNames {
     ;
     public final SystemRoleType role;
     public final String name;
-
+    public static final MqNames[] ALL ={AUTH,BUS,CONFIG,GATE,LOGICS,USERS};
     MqNames(SystemRoleType role, String name) {
         this.role = role;
         this.name = name;

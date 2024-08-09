@@ -1,5 +1,6 @@
 package org.games.gate;
 
+import org.games.support.server.AbstractProgram;
 import org.games.support.server.Sync;
 import org.games.support.server.ProgramContext;
 import org.games.gate.evt.GateEventRegister;
@@ -19,7 +20,7 @@ import java.util.Scanner;
 
 //@SpringBootApplication()//app:org.games.gate.App$$SpringCGLIB$$0@54f66455
 @SpringBootApplication(proxyBeanMethods = false)//app:org.games.gate.App@749f539e
-public class App implements ProgramContext
+public class App extends AbstractProgram
 {
     static final Logger log = LoggerFactory.getLogger(App.class);
     public static SpringApplication app(){
@@ -30,50 +31,53 @@ public class App implements ProgramContext
     }
     static SpringApplication APP;
     static ConfigurableApplicationContext CTX;
-    public static void main( String[] args ) {
+    static ConfigurableApplicationContext ctx;
+
+    @Override
+    protected boolean handleLine(String line) {
+        ConfigurableApplicationContext ctx = App.ctx;
+        log.info("wait command");
+        switch(line){
+            case "quit":
+                return true;
+            case "beans":{
+                for (String name : ctx.getBeanDefinitionNames()) {
+                    log.info("{}",ctx.getBean(name).getClass());
+                }
+            }
+            case "auto":{
+                Arrays.stream(ctx.getBeanDefinitionNames())
+                        .map(ctx::getBean)
+                        .map(Object::getClass)
+                        .map(Class::getName)
+                        .filter(e->e.contains("AutoConfiguration"))
+                        .distinct()
+                        .forEach(log::info)
+                ;
+            }
+            case "netty":{
+                line = readLine();
+                ctx.getBean(SessionManager.class).broadcast(line);
+            }break;
+            default:
+                log.info(line);
+        }
+        return false;
+    }
+
+    public static void main(String[] args ) {
         SpringApplication app = APP=new SpringApplication(App.class);
         app.addListeners(new ApplicationPidFileWriter());
-        ConfigurableApplicationContext ctx = CTX=app.run(args);
+        CTX=ctx=app.run(args);
         sync.start();
 //        System.out.println(ctx.getBean(Gson.class));//yes
-        Scanner scanner = new Scanner(System.in);
-        String line;
-        outer:
-        while(true){
-            log.info("wait command");
-            line=scanner.nextLine().trim();
-            switch(line){
-                case "quit":
-                    break outer;
-                case "beans":{
-                    for (String name : ctx.getBeanDefinitionNames()) {
-                        log.info("{}",ctx.getBean(name).getClass());
-                    }
-                }
-                case "auto":{
-                    Arrays.stream(ctx.getBeanDefinitionNames())
-                            .map(ctx::getBean)
-                            .map(Object::getClass)
-                            .map(Class::getName)
-                            .filter(e->e.contains("AutoConfiguration"))
-                            .distinct()
-                            .forEach(log::info)
-                    ;
-                }
-                case "netty":{
-                    line = scanner.nextLine().trim();
-                    ctx.getBean(SessionManager.class).broadcast(line);
-                }break;
-                default:
-                    log.info(line);
-            }
-        }
-        ctx.getBean(Server.class).shutdown();
         GateEventRegister bean = ctx.getBean(GateEventRegister.class);
-        ctx.close();
         log.info(bean.toString());
+        App a = ctx.getBean(App.class);
+        a.loop(args);
         sync.sync();
-
+        ctx.getBean(Server.class).shutdown();
+        ctx.close();
     }
 
     /*
@@ -94,23 +98,7 @@ org.springframework.boot.autoconfigure.ssl.SslAutoConfiguration
 org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration
 org.springframework.boot.autoconfigure.task.TaskSchedulingAutoConfiguration
      */
-    static Sync sync = new Sync();
-    @Override
-    public void exec(Runnable r){
-        if(Objects.isNull(r))
-            return;
-        if(sync.inWorkerThread(Thread.currentThread())){
-            r.run();
-        }else{
-            sync.exec(r);
-        }
-    }
-    @Override
-    public void post(Runnable r){
-        if(Objects.isNull(r))
-            return;
-        sync.exec(r);
-    }
+
     @Override
     public <T> T get(Class<T> clazz) {
         return ctx().getBean(clazz);

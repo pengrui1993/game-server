@@ -42,3 +42,5 @@ out
 *.pid
 *.ppm
 **/*.log
+*.in
+*.log

@@ -22,7 +22,7 @@ public class App extends AbstractProgram {
         app.addListeners(new ApplicationPidFileWriter());
         ConfigurableApplicationContext ctx = App.ctx = app.run(args);
         App a = ctx.getBean(App.class);
-        a.loop();
+        a.loop(args);
     }
     @Override
     protected boolean handleLine(String line) {

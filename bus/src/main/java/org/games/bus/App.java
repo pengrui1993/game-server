@@ -5,6 +5,7 @@ import org.games.bus._net.Server;
 import org.games.support.server.AbstractProgram;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.ApplicationPidFileWriter;
@@ -37,7 +38,7 @@ public class App extends AbstractProgram {
         app.addListeners(new ApplicationPidFileWriter());
         ConfigurableApplicationContext ctx = App.ctx = app.run(args);
         App a = ctx.getBean(App.class);
-        a.loop();
+        a.loop(args);
     }
     @Override
     protected boolean handleLine(String line) {
@@ -65,8 +66,11 @@ public class App extends AbstractProgram {
         }
         return false;
     }
+    @Value("${config.queue.host}")
+    private String val;
     @Override
     protected void preDestroy() {
+        log.info(val);
         ctx.getBean(Server.class).shutdown();
         ctx.close();
     }

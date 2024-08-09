@@ -5,8 +5,8 @@ import org.games.constant.SystemRoleType;
 
 public abstract class AbstractEvent implements Event{
     public int sender = SystemRoleType.BUS.id;
-    public transient int receiver = SystemRoleType.BUS.id;
-    public int value =100;
+    public int receiver = SystemRoleType.AUTH.id;
+    public transient int value =100;
     public String msg = "hello";
     public boolean condition = false;
     public long senderTime = now();

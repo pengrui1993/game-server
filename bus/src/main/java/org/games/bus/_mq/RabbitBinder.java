@@ -9,6 +9,7 @@ import org.games.constant.MqNames;
 import org.games.event.AbstractEvent;
 import org.games.event.Event;
 import org.games.event.EventUtils;
+import org.games.event.HelloEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -41,14 +42,20 @@ public class RabbitBinder {
     public void randomPublish(String msg){
         String message = msg.isBlank()? "info: Hello World!" :msg;
         AbstractEvent evt;
-        final int i = ThreadLocalRandom.current().nextInt(classes.size());
-        String canonicalName = classes.get(i).getCanonicalName();
-        try {
-            Class<?> aClass = Class.forName(canonicalName);
-            evt = (AbstractEvent)aClass.getConstructor().newInstance();
-        } catch (Throwable e) {
-            log.error(e.getMessage(),e);
-            return;
+        String canonicalName;
+        if(Objects.equals("hello",msg)){
+            evt = new HelloEvent();
+            canonicalName = evt.getClass().getCanonicalName();
+        }else{
+            final int i = ThreadLocalRandom.current().nextInt(classes.size());
+            canonicalName = classes.get(i).getCanonicalName();
+            try {
+                Class<?> aClass = Class.forName(canonicalName);
+                evt = (AbstractEvent)aClass.getConstructor().newInstance();
+            } catch (Throwable e) {
+                log.error(e.getMessage(),e);
+                return;
+            }
         }
         evt.msg = message;
         try {
@@ -95,17 +102,18 @@ public class RabbitBinder {
             }
         }
         for (EventMqMapper value : EventMqMapper.values()) {
-            MqNames mq = value.mq;
             EventType evt = value.evt;
             int eventTypeId = evt.id;
-            String queueName = mq.name;
             String EXCHANGE_NAME = map.get(eventTypeId).getCanonicalName();
-            channel.queueBind(queueName, EXCHANGE_NAME, "");
-            builder.append("[exchanger:")
-                    .append(EXCHANGE_NAME)
-                    .append(",queue:")
-                    .append(queueName)
-                    .append("]\n");
+            for (MqNames mqNames : value.mq) {
+                String queueName = mqNames.name;
+                channel.queueBind(queueName, EXCHANGE_NAME, "");
+                builder.append("[exchanger:")
+                        .append(EXCHANGE_NAME)
+                        .append(",queue:")
+                        .append(queueName)
+                        .append("]\n");
+            }
         }
         log.info("rabbit mq etc:\nall queues:{}\nall exchangers:{}\n{}"
                 , Arrays.stream(MqNames.values()).map(e->e.name).toList()

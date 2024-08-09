@@ -35,4 +35,28 @@ public class AppTest
     {
         assertTrue( true );
     }
+
+    static void en(Class<?> e){
+        if(e.isEnum()){
+            for (Object f : e.getEnumConstants()) {
+                Enum<?> g = (Enum<?>) f;
+                System.out.println(g.name());
+            }
+        }
+    }
+    public static  void call(Class<?>... es) {
+        for (var e : es) {
+            en(e);
+        }
+    }
+
+    public static void main(String[] args) {
+        enum Type{
+            ONE,TWO,THREE
+        }
+        enum Age{
+            SMALL,BIG
+        }
+        call(Type.class,Age.class);
+    }
 }

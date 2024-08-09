@@ -20,11 +20,11 @@ public class Net {
 //    static final String HOST = System.getProperty("host", "127.0.0.1");
 //    static final int PORT = Integer.parseInt(System.getProperty("port", "8007"));
     static final int SIZE = Integer.parseInt(System.getProperty("size", "256"));
-    @Value("${config.bus.port}")
+    @Value("${config.server.port}")
     private int gatePort;
-    @Value("${config.bus.host}")
+    @Value("${config.server.host}")
     private String gateHost;
-    @Value("${config.bus.hostname}")
+    @Value("${config.server.hostname}")
     private String gateHostname;
     @Resource
     private NetHandler netHandler;
