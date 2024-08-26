@@ -3,11 +3,10 @@
 ARGV=$@
 ARGC=$#
 CMD=$1
-nodes=$(cat ./nodes)
+nodes=$2
 function clear_fifo(){
   for str in ${nodes[@]};
   do
-    echo $str
     fifo_path=/tmp/fifo_$str
     if [[ -p $fifo_path ]];then
       echo "send quit command for "$fifo_path
@@ -34,7 +33,7 @@ function create_fifo(){
       rm -f $fifo_path
     fi
     mkfifo $fifo_path
-    nohup echo 'test' > $fifo_path &
+    nohup echo '\n' > $fifo_path &
   done
   echo "create fifo ok"
 }
@@ -55,6 +54,5 @@ function switch_case(){
     ;;
   esac
 }
-#./all_fifo_op.sh clear def
-#echo ${CMD}
+
 switch_case

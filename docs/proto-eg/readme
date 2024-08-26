@@ -1,0 +1,24 @@
+0.  https://github.com/protocolbuffers/protobuf/releases    download some version
+    https://github.com/protocolbuffers/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.bz2
+    tar -xv -f protobuf-2.5.0.tar.bz2
+    ./configure
+    # for make
+    #./configure CC=clang CXX=clang++ CXXFLAGS='-std=c++11 -stdlib=libc++ -O3 -g' LDFLAGS='-stdlib=libc++' LIBS="-lc++ -lc++abi"
+    #vim src/google/protobuf/stubs/platform_macros.h
+    #found src/google/protobuf/stubs/platform_macros.h
+    ##elif defined(__arm64__)
+    ##define GOOGLE_PROTOBUF_ARCH_ARM 1
+    ##define GOOGLE_PROTOBUF_ARCH_64_BIT 1  before
+    #see https://github.com/protocolbuffers/protobuf/issues/8836#issuecomment-892391885
+    make -j10
+    sudo make install
+    #sudo make uninstall
+
+1.  compile.sh
+
+2.  make read
+
+3.  make write
+
+4. ./write.sh
+5. ./read.sh

@@ -1,0 +1,16 @@
+protoc -I=$SRC_DIR --java_out=$DST_DIR $SRC_DIR/addressbook.proto
+protoc -I=$SRC_DIR --cpp_out=$DST_DIR $SRC_DIR/addressbook.proto
+
+
+/*
+npm install -g protobufjs
+npm install protobufjs-cli -g
+pbjs -t static-module -w commonjs -o bundle.js *.proto
+pbts -o bundle.d.ts bundle.js
+*/
+
+protoc \
+    --plugin="./node_modules/.bin/protoc-gen-ts_proto" \
+    --ts_proto_opt=esModuleInterop=true \
+    --ts_proto_out="./src/generated" \
+    src/proto/addressBook.proto

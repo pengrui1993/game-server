@@ -8,6 +8,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.annotation.Resource;
 import org.games.event.netty.NodeEventDecoder;
 import org.games.event.netty.NodeEventEncoder;
@@ -53,7 +54,8 @@ public class Server{
         ChannelFuture bind = b.bind(port);
         serverSideChannel =bind.channel();
     }
-    public void shutdown(){
+    @PreDestroy
+    private void destroy(){
         while(true){
             try {
                 // Wait until the server socket is closed.

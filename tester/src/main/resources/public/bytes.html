@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<script>
+function compress(string, encoding) {
+  const byteArray = new TextEncoder().encode(string);
+  const cs = new CompressionStream(encoding);
+  const writer = cs.writable.getWriter();
+  writer.write(byteArray);
+  writer.close();
+  return new Response(cs.readable).arrayBuffer();
+}
+
+function decompress(byteArray, encoding) {
+  const cs = new DecompressionStream(encoding);
+  const writer = cs.writable.getWriter();
+  writer.write(byteArray);
+  writer.close();
+  return new Response(cs.readable).arrayBuffer().then(function (arrayBuffer) {
+    return new TextDecoder().decode(arrayBuffer);
+  });
+}
+    const text = "好极了!";
+    var xhr = new XMLHttpRequest;
+    xhr.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+           console.log(xhr.responseText);
+        }
+    };
+    compress(text,'gzip').then(res=>{
+        const blob = new Blob([res], { type: 'application/octet-stream' });
+        xhr.open("POST", "/bytes/action", false);
+        xhr.send(blob);
+    });
+
+</script>
+</body>
+</html>

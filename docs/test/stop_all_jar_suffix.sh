@@ -5,7 +5,6 @@ function force_stop_nodes_jar(){
   do
     kill -9 $pid
   done
-  ./clear_gen.sh
 }
 
 force_stop_nodes_jar

@@ -1,0 +1,5 @@
+readme in /META-INF/
+
+在指定了spring.web.resources.static-locations配置的情况下
+/META-INF/resources/ 目录的静态资源仍然可以被访问
+但是 /public/,/public/,/static/ 下的不行

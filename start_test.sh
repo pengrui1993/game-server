@@ -5,16 +5,12 @@ ARGC=$#
 nodes=$(cat ./docs/test/nodes)
 ROOT_PWD=$(pwd)
 REF_DIR=$ROOT_PWD/docs/test
-
+DEBUG_NODE=$(basename $1)
 function fifo_clear(){
-  cd $REF_DIR
-  ./all_fifo_op.sh "clear"
-  cd $ROOT_PWD
+  ./docs/test/all_fifo_op.sh "clear" "$nodes"
 }
 function fifo_create(){
-  cd $REF_DIR
-  ./all_fifo_op.sh "create"
-  cd $ROOT_PWD
+  ./docs/test/all_fifo_op.sh "create" "$nodes"
 }
 function bus_preparing(){
   while test 1
@@ -87,7 +83,7 @@ function bus_check(){
   fi
 }
 check
-bus_check $1
+bus_check $DEBUG_NODE
 start_nodes
 tail -f $PWD/bus.log #1>/tmp/fifo_bus #no working , tail output not under control
 #./docs/test/stop_all_jar_suffix.sh

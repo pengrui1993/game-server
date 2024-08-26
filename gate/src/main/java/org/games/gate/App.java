@@ -23,14 +23,10 @@ import java.util.Scanner;
 public class App extends AbstractProgram
 {
     static final Logger log = LoggerFactory.getLogger(App.class);
-    public static SpringApplication app(){
-        return APP;
-    }
     public static ConfigurableApplicationContext ctx(){
-        return CTX;
+        return ctx;
     }
-    static SpringApplication APP;
-    static ConfigurableApplicationContext CTX;
+    static SpringApplication app;
     static ConfigurableApplicationContext ctx;
 
     @Override
@@ -66,20 +62,19 @@ public class App extends AbstractProgram
     }
 
     public static void main(String[] args ) {
-        SpringApplication app = APP=new SpringApplication(App.class);
+        app=new SpringApplication(App.class);
         app.addListeners(new ApplicationPidFileWriter());
-        CTX=ctx=app.run(args);
-        sync.start();
+        ctx=app.run(args);
+        test();
+        App a = ctx.getBean(App.class);
+        a.loop(args);
+        ctx.close();
+    }
+    static void test(){
 //        System.out.println(ctx.getBean(Gson.class));//yes
         GateEventRegister bean = ctx.getBean(GateEventRegister.class);
         log.info(bean.toString());
-        App a = ctx.getBean(App.class);
-        a.loop(args);
-        sync.sync();
-        ctx.getBean(Server.class).shutdown();
-        ctx.close();
     }
-
     /*
 org.springframework.boot.autoconfigure.AutoConfigurationPackages$BasePackages
 org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration

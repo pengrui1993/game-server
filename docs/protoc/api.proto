@@ -1,0 +1,21 @@
+syntax="proto2";
+package api.protocol;
+
+message Foo{
+  required string name = 1;
+}
+message Bar{
+  optional int32 age = 1;
+}
+message Baz{
+  repeated bool conditions = 1;
+}
+message Command{
+  required int32 id = 1;
+  oneof funny{
+    Foo foo = 2;
+    Bar bar = 3;
+    Baz baz = 4;
+  }
+
+}
