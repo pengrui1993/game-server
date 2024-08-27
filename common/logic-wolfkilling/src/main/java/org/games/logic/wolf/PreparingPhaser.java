@@ -28,7 +28,7 @@ class PreparingPhaser extends MajorPhaser {
         this.ctx = ctx;
     }
     void change(){
-        ctx.sessions.notifyStart(ctx.getRoles());
+        ctx.sessionManager().notifyStart(ctx.getRoles());
         ctx.changeState(new WolfPhaser(ctx));
         started = false;
     }
@@ -181,12 +181,12 @@ class PreparingPhaser extends MajorPhaser {
             out.println("duplicated join game , ignore that,user:"+who);
         }else{
             joined.add(who);
-            ctx.sessions.notifyJoin(who,joined);
+            ctx.sessionManager().notifyJoin(who,joined);
         }
     }
     protected void onLeft(String who){
         if(joined.remove(who)){
-            ctx.sessions.notifyLeft(who,joined);
+            ctx.sessionManager().notifyLeft(who,joined);
         }else{
             out.println("invalid left ,because not exists:"+who);
         }

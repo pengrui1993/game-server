@@ -5,6 +5,6 @@ import java.util.List;
 public enum TilesUtil {
     ;
     public static List<Tile> all(){
-        return null;
+        return Tile.getAll();
     }
 }

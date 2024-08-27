@@ -1,9 +1,7 @@
 package org.games.logic.wolf.race;
 
 import org.games.logic.wolf.core.*;
-import org.games.logic.wolf.util.TalkingRoom;
-import org.games.logic.wolf.util.TalkingRoomManager;
-import org.games.logic.wolf.util.WolfBombUtil;
+import org.games.logic.wolf.util.*;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -21,8 +19,10 @@ class FirstSpeechingPhaser extends MinorPhaser{
     boolean talkingCCW;//anticlockwise/counterclockwise and  clockwise
     float limit;
     float last;
-    private @Final TalkingRoom room;
+    private @Final SpeakingRoom room;
+    private final SpeakingRoomManager speakingRoomManager;
     public FirstSpeechingPhaser(Context ctx, Map<String, Boolean> handsResult) {
+        speakingRoomManager = ctx.talkingRoomManager();
         this.ctx = ctx;
         this.handsState = handsResult;
         List<String> list = handsResult.entrySet().stream().filter(Map.Entry::getValue).map(Map.Entry::getKey).toList();
@@ -65,7 +65,7 @@ class FirstSpeechingPhaser extends MinorPhaser{
 
     @Override
     public void end() {
-        TalkingRoomManager.MGR.destroy(room.joinKey);
+        speakingRoomManager.destroy(room);
         super.end();
     }
 
@@ -76,7 +76,7 @@ class FirstSpeechingPhaser extends MinorPhaser{
         talkingCCW = r.nextBoolean();
         last = curLast = 0;
         test = false;
-        room = TalkingRoomManager.MGR.create(ctx.top().getJoinedUsers());
+        room = speakingRoomManager.create(ctx.top().getJoinedUsers());
         room.active(curUser);
         out.println("first,current start with counterclockwise:"+talkingCCW);
     }

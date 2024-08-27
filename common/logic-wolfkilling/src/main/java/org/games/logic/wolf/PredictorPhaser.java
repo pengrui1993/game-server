@@ -81,7 +81,7 @@ class PredictorPhaser extends MajorPhaser {
                         }
                         String target = String.class.cast(params[2]);
                         verify = Map.entry(target,Roles.WOLF==ctx.get(target).role());
-                        ctx.sessions.notifyPredictorPredictor(verify);
+                        ctx.sessionManager().notifyPredictorPredictor(verify);
                         predictor.ifIsThen(Predictor.class
                                 ,p-> p.verifies.put(verify.getKey(),verify.getValue()));
                     }

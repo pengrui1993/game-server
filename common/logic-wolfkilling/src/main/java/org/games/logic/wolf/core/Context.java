@@ -1,6 +1,10 @@
 package org.games.logic.wolf.core;
 
 
+import org.games.logic.wolf.util.SessionInterface;
+import org.games.logic.wolf.util.SpeakingRoomManager;
+import org.games.logic.wolf.util.TalkingRoomManager;
+
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -38,4 +42,6 @@ public interface Context <PHA extends Enum<PHA>
             else throw new RuntimeException(e);
         }
     }
+    SpeakingRoomManager talkingRoomManager();
+    SessionInterface sessionManager();
 }

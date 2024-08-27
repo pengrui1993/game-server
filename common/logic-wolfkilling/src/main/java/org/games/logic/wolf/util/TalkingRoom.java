@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /*
 https://avaldes.com/java-nio-datagramchannel-tutorial/
  */
-public class TalkingRoom {
+public class TalkingRoom implements SpeakingRoom {
     static final PrintStream out = System.out;
     @Override
     public String toString() {
@@ -63,6 +63,7 @@ public class TalkingRoom {
     public void active(String userId){
         if(this.userId.contains(userId))curUser = userId;
     }
+    @Override
     public void update(float dt){
         last+=dt;
         try {

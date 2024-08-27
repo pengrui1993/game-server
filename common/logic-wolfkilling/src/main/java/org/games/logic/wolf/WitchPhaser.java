@@ -132,7 +132,7 @@ class WitchPhaser extends MajorPhaser {
                                 ctx.calcCtx.medicineSavedUserId = ctx.calcCtx.killingTargetUserId;
                                 witch.medicine = false;
                                 needChange = true;
-                                ctx.sessions.notifyWitchSave(witchId);
+                                ctx.sessionManager().notifyWitchSave(witchId);
                             }
                             case "kill"->{
                                 if(state!=State.KILLING){
@@ -155,11 +155,11 @@ class WitchPhaser extends MajorPhaser {
                                 ctx.calcCtx.drugKilledUserId = target;
                                 witch.drug = false;
                                 needChange = true;
-                                ctx.sessions.notifyWitchKill(witchId,target);
+                                ctx.sessionManager().notifyWitchKill(witchId,target);
                             }
                             case "cancel"-> {
                                 requestedCancel = true;
-                                ctx.sessions.notifyWitchCancel(witchId);
+                                ctx.sessionManager().notifyWitchCancel(witchId);
                             }
                             default -> out.println("unknown action in witch phaser:"+actionType);
                         }

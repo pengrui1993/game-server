@@ -63,25 +63,30 @@ class PublishDiedInfoPhaser extends MajorPhaser {
             ctx.changeState(new LastWordsPhaser(ctx,cc.calcDiedUserId
                     ,()-> ctx.changeState(new OrderingPhaser(ctx))));
         };
-        final Roles role = ctx.get(cc.calcDiedUserId).role();
-        //(((ctx.setting.hunterAbilityWhenWolfKill||first)&&(cc.isTargetDied()&&role==Roles.HUNTER))?complexPhaser:simplePhaser).run();
+        var role = ctx.get(cc.calcDiedUserId).role();
         boolean cond = ctx.setting.hunterAbilityWhenWolfKill||first;
         boolean complex = cond&&cc.isTargetDied()&&role==Roles.HUNTER;
-        Supplier<Runnable> run = ()->complex?complexPhaser:simplePhaser;
-        run.get().run();
-//        if(ctx.setting.hunterAbilityWhenWolfKill){
-//            if(cc.isTargetDied()&&role==Roles.HUNTER){
-//                complexPhaser.run();
-//                return;
-//            }
-//            simplePhaser.run();
-//        }else{
-//            if(first&&cc.isTargetDied()&&role== Roles.HUNTER){
-//                complexPhaser.run();
-//                return;
-//            }
-//            simplePhaser.run();
-//        }
+        Runnable run = complex?complexPhaser:simplePhaser;
+        run.run();
+        final Runnable logicSameUponLines = ()->{
+            (((ctx.setting.hunterAbilityWhenWolfKill||first)&&(cc.isTargetDied()&&role==Roles.HUNTER))?complexPhaser:simplePhaser).run();
+        };
+        final Runnable logicSameUponLinesYet = ()->{
+            if(ctx.setting.hunterAbilityWhenWolfKill){
+                if(cc.isTargetDied()&&role==Roles.HUNTER){
+                    complexPhaser.run();
+                    return;
+                }
+                simplePhaser.run();
+            }else{
+                if(first&&cc.isTargetDied()&&role== Roles.HUNTER){
+                    complexPhaser.run();
+                    return;
+                }
+                simplePhaser.run();
+            }
+        };
+
     }
     @Override
     public void update(float dt) {
@@ -99,13 +104,12 @@ class PublishDiedInfoPhaser extends MajorPhaser {
                 if(params.length<1)return;
                 switch (Action.from(Integer.class.cast(params[0]))){
                     case UNKNOWN -> {
-                        out.println("publish unkonwn");
+                        out.println("publish unknown");
                     }
                     case TEST_DONE -> {
                         test = true;
                         out.println("publish died info, test enabled");
                     }
-
                 }
             }
         }

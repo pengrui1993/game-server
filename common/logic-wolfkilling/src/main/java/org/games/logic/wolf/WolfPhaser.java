@@ -30,7 +30,7 @@ class WolfPhaser extends MajorPhaser {
         last = 0;
         limit = ctx.setting.wolfActionTimeoutLimit;
         if(!firstTimes)ctx.deadInfo.print(out);
-        ctx.sessions.notifyWolfAction(ctx.getJoinedUsers());
+        ctx.sessionManager().notifyWolfAction(ctx.getJoinedUsers());
         out.println("wolf phaser begin");
     }
     boolean test;
@@ -102,7 +102,7 @@ class WolfPhaser extends MajorPhaser {
                         }
                         final String pre = wolfSelectResult.get(wolf);
                         wolfSelectResult.put(wolf,target);
-                        ctx.sessions.notifyWolfSelect(ctx.aliveWolf(),wolf,target,pre);
+                        ctx.sessionManager().notifyWolfSelect(ctx.aliveWolf(),wolf,target,pre);
                     }
                     case TEST_DONE ->{
                         out.println("wolf phaser test enabled");

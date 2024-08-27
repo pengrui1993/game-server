@@ -14,23 +14,19 @@ public interface SessionInterface {
     default void stub(){
         out();
     }
-    default void notifyJoin(Object... params){
-        stub();
+    default void notifyJoin(Object... params){stub();
         String who = params[0].toString();
         out.println("notify,"+who+" joined room");
     }
-    default void notifyLeft(Object... params){
-        stub();
+    default void notifyLeft(Object... params){stub();
         String who = params[0].toString();
         out.println("notify,left the room:"+who);
     }
-    default void notifyStart(Object... params){
-        stub();
+    default void notifyStart(Object... params){stub();
         Map<String, Role> players = Map.class.cast(params[0]);
         out.println("notify,start the room:"+players);
     }
-    default void notifyStateChange(Object... params){
-        stub();
+    default void notifyStateChange(Object... params){stub();
         Map<String,Role> users = Map.class.cast(params[0]);
         Major from = Major.class.cast(params[1]);
         Major to = Major.class.cast(params[2]);
@@ -41,8 +37,7 @@ public interface SessionInterface {
                 .toList();
         out.printf("notify to %s,state change from->to [%s->%s]\n",allow,from,to);
     }
-    default void notifyWolfAction(Object... params){
-        stub();
+    default void notifyWolfAction(Object... params){stub();
         List<String> users = List.class.cast(params[0]);
         out.println("notify, client,wolf action:"+users);
     }

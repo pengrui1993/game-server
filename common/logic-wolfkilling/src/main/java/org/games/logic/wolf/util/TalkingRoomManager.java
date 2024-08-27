@@ -5,19 +5,26 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class TalkingRoomManager {
+public class TalkingRoomManager implements SpeakingRoomManager{
     private final Map<String,TalkingRoom> rooms = new ConcurrentHashMap<>();
     public TalkingRoom create(List<String> userIdList){
         TalkingRoom talkingRoom = TalkingRoom.create(userIdList);
         rooms.put(talkingRoom.joinKey,talkingRoom);
         return talkingRoom;
     }
-    public void destroy(String id){
+    @Override
+    public void destroy(SpeakingRoom room) {
+        TalkingRoom r = (TalkingRoom)room;
+        destroy(r.joinKey);
+    }
+
+    private void destroy(String id){
         TalkingRoom talkingRoom = rooms.remove(id);
         if(Objects.isNull(talkingRoom))return;
         talkingRoom.close();
     }
     float last;
+    @Override
     public void update(float dt){
         last+=dt;
         rooms.values().forEach(e-> e.update(dt));

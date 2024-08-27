@@ -1,12 +1,10 @@
 package org.games.logic.wolf.race;
 
 import org.games.logic.wolf.core.Minor;
-import org.games.logic.wolf.util.WolfBombUtil;
+import org.games.logic.wolf.util.*;
 import org.games.logic.wolf.core.Action;
 import org.games.logic.wolf.core.Final;
 import org.games.logic.wolf.core.Event;
-import org.games.logic.wolf.util.TalkingRoom;
-import org.games.logic.wolf.util.TalkingRoomManager;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -22,8 +20,10 @@ class SecondSpeechingPhaser extends MinorPhaser{
     boolean talkingCCW;//anticlockwise/counterclockwise and  clockwise
     float limit;
     float last;
+    final SpeakingRoomManager speakingRoomManager;
     public SecondSpeechingPhaser(Context ctx, List<String> raceUp, List<String> raceDown) {
         this.ctx = ctx;
+        speakingRoomManager = ctx.talkingRoomManager();
         this.raceUp = raceUp;
         this.raceDown = raceDown;
     }
@@ -60,15 +60,15 @@ class SecondSpeechingPhaser extends MinorPhaser{
         startUser = curUser = raceUp.get(r.nextInt(raceUp.size()));
         talkingCCW = r.nextBoolean();
         last = curLast = 0;
-        room = TalkingRoomManager.MGR.create(ctx.top().getJoinedUsers());
+        room = speakingRoomManager.create(ctx.top().getJoinedUsers());
         room.active(curUser);
         limit = ctx.top().setting.secondSpeechingTimeLimit;
         out.println("second racing,current start with counterclockwise:"+talkingCCW);
     }
-    private @Final TalkingRoom room;
+    private @Final SpeakingRoom room;
     @Override
     public void end() {
-        TalkingRoomManager.MGR.destroy(room.joinKey);
+        speakingRoomManager.destroy(room);
         super.end();
     }
     @Override

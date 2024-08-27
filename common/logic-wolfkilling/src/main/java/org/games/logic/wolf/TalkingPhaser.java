@@ -1,9 +1,7 @@
 package org.games.logic.wolf;
 
 import org.games.logic.wolf.core.*;
-import org.games.logic.wolf.util.TalkingRoom;
-import org.games.logic.wolf.util.TalkingRoomManager;
-import org.games.logic.wolf.util.WolfBombUtil;
+import org.games.logic.wolf.util.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +23,11 @@ class TalkingPhaser extends MajorPhaser {
     @Final float limit;
     boolean test;
     private final List<String> aliveUser = new ArrayList<>();
-    private @Final TalkingRoom room;
+    private final SpeakingRoomManager speakingRoomManager;
+    private @Final SpeakingRoom room;
     TalkingPhaser(WolfKilling ctx) {
         this.ctx = ctx;
+        speakingRoomManager = ctx.talkingRoomManager();
     }
     @Override
     public void begin() {
@@ -45,7 +45,7 @@ class TalkingPhaser extends MajorPhaser {
         limit = ctx.setting.talkingLimit;
         test = false;
         ctx.curDayTalkingTimes++;
-        room = TalkingRoomManager.MGR.create(ctx.getJoinedUsers());
+        room = speakingRoomManager.create(ctx.getJoinedUsers());
         room.active(curUser);
         stateChange = false;
         out.println("talking phaser begin , ordering ccw:"+this.orderingCCW
@@ -53,7 +53,7 @@ class TalkingPhaser extends MajorPhaser {
     }
     @Override
     public void end() {
-        TalkingRoomManager.MGR.destroy(room.joinKey);
+        speakingRoomManager.destroy(room);
         out.println("talking phaser end");
     }
 
